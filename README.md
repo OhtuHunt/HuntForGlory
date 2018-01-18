@@ -11,3 +11,5 @@ https://docs.google.com/spreadsheets/d/17PduZQHrmnuX6p_RP01JO7bq5TDrcI7-3gSi1h1w
 
 #### Ensimmäinen tapaaminen
 https://github.com/OhtuHunt/HuntForGlory/blob/master/OhtuP1.md
+
+
