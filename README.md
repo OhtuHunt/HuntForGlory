@@ -3,6 +3,8 @@
 ### Product backlog
 https://docs.google.com/spreadsheets/d/17PduZQHrmnuX6p_RP01JO7bq5TDrcI7-3gSi1h1wwI4/edit?ts=5a5c6da6#gid=0
 
+### Drive-kansio
+https://drive.google.com/drive/folders/10lK1HtHSuotmiAjwj4vCeRSRPuYMGMyj?usp=sharing
 
 ### Travis
 [![Build Status](https://travis-ci.org/OhtuHunt/HuntForGlory.svg?branch=master)](https://travis-ci.org/OhtuHunt/HuntForGlory)
