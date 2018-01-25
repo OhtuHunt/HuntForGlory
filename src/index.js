@@ -2,17 +2,19 @@ import './index.css';
 import registerServiceWorker from './registerServiceWorker';
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { Card, CardHeader, CardBody, CardFooter } from "react-simple-card";
+import { Card, CardBody } from "react-simple-card";
 
 const GenerateCard = ({ title, text }) => {
     return (
         <div>
-        <Card>
-            <CardBody>
-                <h2>{title}</h2>
-                <p>{text}</p>
-            </CardBody>
-        </Card>
+            <a href="/">
+                <Card>
+                    <CardBody>
+                        <h2>{title}</h2>
+                        <p>{text}</p>
+                    </CardBody>
+                </Card>
+            </a>
         </div>
     )
 }

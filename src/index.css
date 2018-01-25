@@ -125,3 +125,7 @@ ul {
             transform-origin: 50%;
     -webkit-animation: line 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite, rotate 1.6s linear infinite;
             animation: line 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite, rotate 1.6s linear infinite; }
+
+a {
+    text-decoration: none;
+}
