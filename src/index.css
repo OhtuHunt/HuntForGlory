@@ -13,6 +13,16 @@ html, body {
 html {
   overflow: hidden; }
 
+.points {
+    position: fixed;right:10px;
+}
+
+.description {
+    position: float;left:15px;
+    padding-right: 40px;
+    color: blue;
+}
+
 body {
   display: -webkit-box;
   display: -webkit-flex;
