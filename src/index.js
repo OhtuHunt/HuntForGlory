@@ -1,30 +1,49 @@
-import './index.css';
-import registerServiceWorker from './registerServiceWorker';
-import React from 'react'
-import ReactDOM from 'react-dom'
+import "./index.css";
+import registerServiceWorker from "./registerServiceWorker";
+import React from "react";
+import ReactDOM from "react-dom";
 import { Card, CardBody } from "react-simple-card";
 
-const GenerateCard = ({ title, text }) => {
-    return (
-        <div>
-            <a href="/">
-                <Card>
-                    <CardBody>
-                        <h2>{title}</h2>
-                        <p>{text}</p>
-                    </CardBody>
-                </Card>
-            </a>
-        </div>
-    )
-}
-const App = () => (
+const GenerateCard = ({ title, questType, points }) => {
+  return (
     <div>
-        <GenerateCard title="Käy laitoksella" text="Käy laitoksella huoneessa BK112 ja anna taululla lukeva koodi" />
-        <GenerateCard title="Käy lounaalla" text="Käy laitoksella kanssaopiskelijan kanssa" />
-        <GenerateCard title="Anna Artolle yläfemma" text="You know what to do!" />
+      <a href="/">
+        <Card>
+          <CardBody>
+            <h2>{title}</h2>
+            <table>
+              <tbody>
+                <tr>
+                  <td className="questType">{questType}</td>
+                  <td className="points">{points}</td>
+                </tr>
+              </tbody>
+            </table>
+          </CardBody>
+        </Card>
+      </a>
     </div>
+  );
+};
+const App = () => (
+  <div>
+    <GenerateCard
+      title="Käy laitoksella"
+      questType="Solo-quest"
+      points="10"
+    />
+    <GenerateCard
+      title="Käy lounaalla"
+      questType="team-quest"
+      points="10"
+    />
+    <GenerateCard
+      title="Anna Artolle yläfemma"
+      questType="You know what to do!"
+      points="100"
+    />
+  </div>
 );
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById("root"));
 registerServiceWorker();
