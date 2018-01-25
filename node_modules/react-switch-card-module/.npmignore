@@ -1,0 +1,17 @@
+node_modules/
+nohup.out
+.idea/
+.ipr
+.iws
+*~
+~*
+*.diff
+*.log
+*.patch
+*.bak
+.DS_Store
+Thumbs.db
+.project
+.*proj
+*.swp
+out/

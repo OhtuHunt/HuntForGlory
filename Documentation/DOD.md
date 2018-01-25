@@ -1,6 +1,3 @@
 # Definition of Done
 
-Taskeista koostuva User Story on valmis, kun jokainen siihen liittyvä task on analysoitu, suunniteltu, ohjelmoitu, testattu ja testit automatisoitu, dokumentoitu ja integroitu sekä pystytetty tuotantoon.
-
-
-
+Task is done, when it has passed Prettier-standards and gone through Continuous deployment -pipeline.
