@@ -16,6 +16,7 @@ const formatQuest = (quest) => {
     description: quest.description,
     points: quest.points,
     done: quest.done,
+    type: quest.type,
     id: quest._id
   }
 }
@@ -55,6 +56,7 @@ app.post('/api/quests', (request, response) => {
     name: body.name,
     description: body.description,
     points: body.points,
+    type: body.type,
     done: body.done
   })
 
@@ -73,6 +75,7 @@ app.put('/api/quests/:id', (request, response) => {
     name: body.name,
     description: body.description,
     points: body.points,
+    type: body.type,
     done: body.done
   }
 
