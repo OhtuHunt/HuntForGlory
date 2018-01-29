@@ -14,15 +14,18 @@ html {
   overflow: hidden; }
 
 .points {
-    position: fixed;right:10px;
+    text-align: right;
 }
-
-.description {
-    position: float;left:15px;
-    padding-right: 40px;
-    color: blue;
+.questType {
+    text-align: left;
 }
-
+button {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
 body {
   display: -webkit-box;
   display: -webkit-flex;

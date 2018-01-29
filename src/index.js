@@ -8,11 +8,11 @@ import axios from "axios";
 const GenerateCard = ({ title, questType, points }) => {
     return (
         <div>
-            <a href="/">
+            <button style={{width:'100%'}}>
                 <Card>
                     <CardBody>
                         <h2>{title}</h2>
-                        <table>
+                        <table style={{width: '100%'}}>
                             <tbody>
                                 <tr>
                                     <td className="questType">{questType}</td>
@@ -22,7 +22,7 @@ const GenerateCard = ({ title, questType, points }) => {
                         </table>
                     </CardBody>
                 </Card>
-            </a>
+            </button>
         </div>
     );
 };
@@ -48,6 +48,7 @@ class App extends React.Component {
         return (
         <div>
             {this.state.quests.map(quest => <GenerateCard
+                key={quest.id}
                 title={quest.name}
                 questType={quest.type}
                 points={quest.points}
