@@ -15,7 +15,7 @@ https://drive.google.com/open?id=10lK1HtHSuotmiAjwj4vCeRSRPuYMGMyj
 
 
 ### Rakennekaavio
-![Rakennekaavio](https://tinyurl.com/y9hbt73b)
+https://tinyurl.com/y9hbt73b
 
 ### Muistiinpanot
 
