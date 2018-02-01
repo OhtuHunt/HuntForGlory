@@ -13,8 +13,9 @@ https://drive.google.com/open?id=10lK1HtHSuotmiAjwj4vCeRSRPuYMGMyj
 ### Travis
 [![Build Status](https://travis-ci.org/OhtuHunt/HuntForGlory.svg?branch=master)](https://travis-ci.org/OhtuHunt/HuntForGlory)
 
-### Muistiinpanot
 
-#### Ensimmäinen tapaaminen
-https://github.com/OhtuHunt/HuntForGlory/blob/master/OhtuP1.md
+### Rakennekaavio
+![Rakennekaavio](https://tinyurl.com/y9hbt73b)
+
+### Muistiinpanot
 
