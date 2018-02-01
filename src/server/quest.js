@@ -15,7 +15,8 @@ const Quest = mongoose.model('Quest', {
   description: String,
   points: Number,
   type: String,
-  done: Boolean
+  done: Boolean,
+  activationCode: String
 })
 
 module.exports = Quest
