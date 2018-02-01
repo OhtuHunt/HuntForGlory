@@ -11,7 +11,6 @@ notifications:
   email: false
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
   - "echo $TRAVIS_PULL_REQUEST"
   - "curl -o /tmp/travis-automerge https://raw.githubusercontent.com/OhtuHunt/HuntForGlory/master/travis-merge.sh"
   - "chmod a+x /tmp/travis-automerge"
