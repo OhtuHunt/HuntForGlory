@@ -15,7 +15,7 @@ https://drive.google.com/open?id=10lK1HtHSuotmiAjwj4vCeRSRPuYMGMyj
 
 
 ### Rakennekaavio
-![Rakennekaavio](github.com/HuntForGlory/Documentation/Architecture.png
+![Rakennekaavio](github.com/HuntForGlory/Documentation/Architecture.png)
 
 ### Muistiinpanot
 
