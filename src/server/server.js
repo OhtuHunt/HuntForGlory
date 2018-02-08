@@ -2,8 +2,12 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
-
 const Quest = require('./quest')
+
+const loginRouter = require('express').Router()
+const tmc = require('tmc-client-js')
+const tmcClient = new tmc()
+
 app.use(cors())
 
 app.use(bodyParser.json())
@@ -91,6 +95,17 @@ app.put('/api/quests/:id', (request, response) => {
       console.log(error)
       response.status(400).send({ error: 'malformatted id' })
     })
+})
+
+app.post('/api/login', (request, response) => {
+  console.log("1")
+  const body = request.body
+  const param = {
+    username: body.username,
+    password: body.password
+  }
+  console.log(tmcClient.authenticate)
+  tmcClient.authenticate(body.username, body.password)
 })
 
 const error = (request, response) => {
