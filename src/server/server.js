@@ -93,6 +93,18 @@ app.put('/api/quests/:id', (request, response) => {
     })
 })
 
+app.delete('/api/quests/:id', (request, response) => {
+  Quest
+    .findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => {
+      console.log(error)
+      response.status(400).send({error: 'malformatted id'})
+    })
+})
+
 const error = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
