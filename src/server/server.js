@@ -3,6 +3,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const Quest = require('./quest')
+const AppUser = require('./app_user')
 const axios = require('axios')
 
 require('dotenv').config()
@@ -57,6 +58,18 @@ app.get('/api/quests/:id', (request, response) => {
     .catch(error => {
       console.log(error)
       response.status(400).send({ error: 'malformatted id' })
+    })
+})
+
+app.get('/api/users/tmc/:id', (request, response) => {
+  AppUser
+    .findOne({"tmc_id": request.params.id})
+    .then(user => {
+      if (user) {
+        response.json(user)
+      } else {
+        response.status(404).send({ error: 'malformatted id'})
+      }
     })
 })
 
@@ -127,7 +140,7 @@ app.post('/api/login', async (request, response) => {
   }
   try {
     const res = await tmcClient.authenticate(param)
-    var config = {
+    const config = {
       headers: {
         "Authorization": `Bearer ${res.accessToken}`,
         "Content-Type": "application/json"
@@ -135,7 +148,27 @@ app.post('/api/login', async (request, response) => {
     }
 
     const user = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-    
+    /* HEROKU LINKKI TÄHÄN */
+    const response = await axios.get(`http://localhost:3001/api/users/tmc/${user.data.id}`)
+    /* ----------------- */
+    /*if (response.data.id) {
+      response.json(response.data)
+    } else {
+      const appUser = new AppUser({
+        username: user.data.username,
+        email: user.data.email,
+        tmc_id: user.data.id,
+        admin: user.data.administrator,
+        points: 0
+      })
+
+      appUser
+      .save()
+      .then(savedUser => {
+        response.json(savedUser)
+      })
+    } */
+
 
   } catch (e) {
     console.error(e);
