@@ -3,10 +3,11 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const Quest = require('./quest')
-require('dotenv').config()
+const axios = require('axios')
 
+require('dotenv').config()
 require('es6-promise').polyfill();
-require('isomorphic-fetch');
+const fetch = require('isomorphic-fetch');
 
 const loginRouter = require('express').Router()
 const tmc = require('tmc-client-js')
@@ -35,6 +36,11 @@ app.get('/api/quests', (request, response) => {
     .find({})
     .then(quests => {
       response.json(quests.map(formatQuest))
+      console.log(quests)
+    })
+    .catch(error => {
+      console.log(error)
+      response.status(400).end()
     })
 })
 
@@ -114,16 +120,23 @@ app.delete('/api/quests/:id', (request, response) => {
 })
 
 app.post('/api/login', async (request, response) => {
-  console.log("1")
   const body = request.body
   const param = {
     username: body.username,
     password: body.password
   }
-  console.log(tmcClient.authenticate)
   try {
     const res = await tmcClient.authenticate(param)
-    console.log(res)
+    var config = {
+      headers: {
+        "Authorization": `Bearer ${res.accessToken}`,
+        "Content-Type": "application/json"
+      }
+    }
+
+    const user = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
+    
+
   } catch (e) {
     console.error(e);
   } finally {
