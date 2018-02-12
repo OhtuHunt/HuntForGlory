@@ -5,8 +5,9 @@
   "dependencies": {
     "axios": "^0.17.1",
     "cors": "^2.8.4",
-    "dotenv": "^4.0.0",
+    "es6-promise": "^4.2.4",
     "express": "^4.16.2",
+    "isomorphic-fetch": "^2.2.1",
     "mongoose": "^5.0.0",
     "prettier": "^1.10.2",
     "react": "^16.2.0",
@@ -16,8 +17,7 @@
     "react-scripts": "1.1.0",
     "react-simple-card": "^1.0.11",
     "react-switch-card-module": "^1.0.2",
-    "tmc-client-js": "0.0.7",
-    "whatwg-fetch": "^2.0.3"
+    "tmc-client-js": "0.0.7"
   },
   "scripts": {
     "start": "node ./src/server/server.js",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "jshint": "^2.9.5",
-    "nodemon": "^1.14.11"
+    "nodemon": "^1.14.11",
+    "dotenv": "^4.0.0"
   }
 }

@@ -3,10 +3,14 @@ const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const Quest = require('./quest')
+require('dotenv').config()
+
+require('es6-promise').polyfill();
+require('isomorphic-fetch');
 
 const loginRouter = require('express').Router()
 const tmc = require('tmc-client-js')
-const tmcClient = new tmc()
+const tmcClient = new tmc(process.env.CLIENT_ID, process.env.CLIENT_SECRET)
 
 app.use(cors())
 
@@ -97,7 +101,7 @@ app.put('/api/quests/:id', (request, response) => {
     })
 })
 
-app.post('/api/login', (request, response) => {
+app.post('/api/login', async (request, response) => {
   console.log("1")
   const body = request.body
   const param = {
@@ -105,7 +109,15 @@ app.post('/api/login', (request, response) => {
     password: body.password
   }
   console.log(tmcClient.authenticate)
-  tmcClient.authenticate(body.username, body.password)
+  try {
+    const res = await tmcClient.authenticate(param)
+    console.log(res)
+  } catch (e) {
+    console.error(e);
+  } finally {
+
+  }
+
 })
 
 const error = (request, response) => {
