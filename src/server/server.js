@@ -2,8 +2,16 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
-
 const Quest = require('./quest')
+require('dotenv').config()
+
+require('es6-promise').polyfill();
+require('isomorphic-fetch');
+
+const loginRouter = require('express').Router()
+const tmc = require('tmc-client-js')
+const tmcClient = new tmc(process.env.CLIENT_ID, process.env.CLIENT_SECRET)
+
 app.use(cors())
 
 app.use(bodyParser.json())
@@ -103,6 +111,24 @@ app.delete('/api/quests/:id', (request, response) => {
       console.log(error)
       response.status(400).send({error: 'malformatted id'})
     })
+})
+
+app.post('/api/login', async (request, response) => {
+  console.log("1")
+  const body = request.body
+  const param = {
+    username: body.username,
+    password: body.password
+  }
+  console.log(tmcClient.authenticate)
+  try {
+    const res = await tmcClient.authenticate(param)
+    console.log(res)
+  } catch (e) {
+    console.error(e);
+  } finally {
+
+  }
 })
 
 const error = (request, response) => {
