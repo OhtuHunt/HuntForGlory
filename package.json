@@ -24,7 +24,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "jshint": "node_modules/.bin/jshint src/"
+    "jshint": "node_modules/.bin/jshint src/",
+    "watch": "node_modules/.bin/nodemon src/server/server.js"
   },
   "devDependencies": {
     "jshint": "^2.9.5",
