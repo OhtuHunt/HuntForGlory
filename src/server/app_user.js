@@ -10,10 +10,15 @@ mongoose.connect(url)
 mongoose.Promise = global.Promise
 
 const AppUser = mongoose.model('AppUser', {
+  tmc_id: Number,
   username: String,
   points: Number,
   email: String,
   admin: Boolean
 })
 
-module.exports = AppUser
+const closeConnection = () => {
+  mongoose.connection.close()
+}
+
+module.exports = { AppUser, closeConnection }

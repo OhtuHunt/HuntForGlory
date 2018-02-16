@@ -17,19 +17,21 @@
     "react-scripts": "1.1.0",
     "react-simple-card": "^1.0.11",
     "react-switch-card-module": "^1.0.2",
-    "tmc-client-js": "0.0.7"
+    "tmc-client-js": "0.0.7",
+    "heroku-ssl-redirect": "0.0.4"
   },
   "scripts": {
     "start": "node ./src/server/server.js",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "jshint": "node_modules/.bin/jshint src/",
-    "watch": "node_modules/.bin/nodemon src/server/server.js"
+    "watch": "NODE_ENV=development node_modules/.bin/nodemon src/server/server.js"
   },
   "devDependencies": {
+    "dotenv": "^4.0.0",
+    "jest": "^22.3.0",
     "jshint": "^2.9.5",
     "nodemon": "^1.14.11",
-    "dotenv": "^4.0.0"
+    "supertest": "^3.0.0"
   }
 }

@@ -16,6 +16,7 @@ const Quest = mongoose.model('Quest', {
   points: Number,
   type: String,
   done: Boolean,
+  started: Boolean,
   activationCode: String
 })
 
