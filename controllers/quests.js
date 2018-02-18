@@ -1,8 +1,10 @@
 const questsRouter = require('express').Router()
 const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
+const axios = require('axios')
 
-const formatQuest = (quest) => {
+//Not used anymore..?
+/*const formatQuest = (quest) => {
     return {
       name: quest.name,
       description: quest.description,
@@ -13,13 +15,15 @@ const formatQuest = (quest) => {
       id: quest._id,
       activationCode: quest.activationCode
     }
-  }
+  }*/
 
 questsRouter.get('/', (request, response) => {
     Quest
         .find({})
+        .populate('usersStarted', { username: 1, type: 1, tmc_id: 1 })
+        .populate('usersFinished', { username: 1, type: 1, tmc_id: 1 })
         .then(quests => {
-            response.json(quests.map(formatQuest))
+            response.json(quests.map(Quest.format))
             console.log(quests)
         })
         .catch(error => {
@@ -33,7 +37,7 @@ questsRouter.get('/:id', (request, response) => {
         .findById(request.params.id)
         .then(quest => {
             if (quest) {
-                response.json(formatQuest(quest))
+                response.json(Quest.format(quest))
             } else {
                 response.status(404).end()
             }
@@ -62,7 +66,7 @@ questsRouter.post('/', (request, response) => {
 
     quest
         .save()
-        .then(formatQuest)
+        .then(Quest.format)
         .then(savedAndFormattedQuest => {
             response.json(savedAndFormattedQuest)
         })
@@ -84,7 +88,7 @@ questsRouter.put('/:id', (request, response) => {
     Quest
         .findByIdAndUpdate(request.params.id, quest, { new: true })
         .then(updatedQuest => {
-            response.json(formatQuest(updatedQuest))
+            response.json(Quest.format(updatedQuest))
         })
         .catch(error => {
             console.log(error)
@@ -102,6 +106,72 @@ questsRouter.delete('/:id', (request, response) => {
             console.log(error)
             response.status(400).send({ error: 'malformatted id' })
         })
+})
+
+questsRouter.put('/start/:id', async (request, response) => {
+    //This one starts the quest
+    //Requires logged in user
+    //If quest id is not found, return error status
+    //If user has this quest, return error status
+    //Add quest and false to user.quests: quest ref and finished=false
+    //Also add user to quest.usersStarted
+    const config = {
+        headers: {
+            "Authorization": `bearer ${request.body.token}`,
+            "Content-Type": "application/json"
+        }
+    }
+
+    const userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
+    let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
+
+    let startedQuest = await Quest.findById(request.params.id)
+
+    user.quests = await user.quests.concat([{ quest: startedQuest._id, finished: false }])
+    await user.save()
+
+    startedQuest.usersStarted = await startedQuest.usersStarted.concat(user.id)
+    await startedQuest.save()
+})
+
+
+questsRouter.put('/finish/:id', async (request, response) => {
+    /* Currently works but I don't know why (array mutation)
+        no restrictions yet
+        TMC authentication should be cleaner (own module) */
+
+    //This one starts the quest
+    //Requires logged in user
+    //If quest id is not found, return error status
+    //If user does not have this quest, return error status
+    //If user has this quest already finished, don't do anything(?)
+    //Edit finished=true user.quests where quest id matches 
+    //Also add user to quest.usersFinished -- Keep usersStarted ?
+
+    const config = {
+        headers: {
+            "Authorization": `bearer ${request.body.token}`,
+            "Content-Type": "application/json"
+        }
+    }
+
+    const userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
+    let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
+
+    let finishedQuests = user.quests
+    
+    finishedQuests = await finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
+        .map(quest => {
+            const newQuest = quest
+            newQuest.finished = true
+            return newQuest
+        })
+
+    await user.save()
+
+    let finishedQuest = await Quest.findById(request.params.id) 
+    finishedQuest.usersFinished = await finishedQuest.usersFinished.concat(user.id)
+    await finishedQuest.save()
 })
 
 module.exports = questsRouter

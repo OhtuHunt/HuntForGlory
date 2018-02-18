@@ -1,0 +1,7 @@
+PUT http://localhost:3001/api/quests/start/5a898497dfdadb0014c30bde
+content-type: application/json
+Authorization: bearer b1edaeb41fd8e60214232a4e6493c36810ce7e7514fd8c05632b1b75269f712c
+
+{
+    "token": "b1edaeb41fd8e60214232a4e6493c36810ce7e7514fd8c05632b1b75269f712c"
+}

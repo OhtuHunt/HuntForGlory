@@ -8,7 +8,9 @@ const formatUser = (user) => {
 }
 
 usersRouter.get('/', async (request, response) => {
-    const users = await AppUser.find({})
+    const users = await AppUser
+        .find({})
+        .populate('quests.quest', { name: 1, type: 1, points: 1 } )
     try {
         response.json(users)
         console.log(users)

@@ -5,7 +5,12 @@ const userSchema = new mongoose.Schema({
     username: String,
     points: Number,
     email: String,
-    admin: Boolean
+    admin: Boolean,
+    quests: [
+        {
+            quest: { type: mongoose.Schema.Types.ObjectId, ref: 'Quest' },
+            finished: Boolean
+        }]
 })
 
 userSchema.statics.format = (user) => {
@@ -15,7 +20,8 @@ userSchema.statics.format = (user) => {
         username: user.username,
         points: user.points,
         email: user.email,
-        admin: user.admin
+        admin: user.admin,
+        quests: user.quests
     }
 }
 
