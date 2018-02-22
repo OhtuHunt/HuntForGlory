@@ -45,6 +45,38 @@ describe('API GET all from api/quests', async () => {
 
 })
 
+describe('POST, adding a new quest to api/quests', async () => {
+
+test('Adding a new quest', async () => {
+    const questsInDb = await questsInTestDb() 
+
+    const newQuest = {
+        name: "a new quest",
+        description: "Testing POST",
+        points: 150,
+        type: "Solo-quest",
+        done: true,
+        started: true,
+        activationCode: "post"
+    }
+
+    await api
+            .post('/api/quests')
+            .send(newQuest)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+
+        const response = await api
+            .get('/api/quests')
+
+            const questNames = response.body.map(r => r.name)
+            expect(questNames).toContain('a new quest')
+
+        expect(response.body.length).toBe(questsInDb.length + 1)
+})
+
+})
+
 
 
 afterAll(() => {
