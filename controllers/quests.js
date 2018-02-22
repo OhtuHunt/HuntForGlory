@@ -3,20 +3,6 @@ const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
 const axios = require('axios')
 
-//Not used anymore..?
-/*const formatQuest = (quest) => {
-    return {
-      name: quest.name,
-      description: quest.description,
-      points: quest.points,
-      done: quest.done,
-      started: quest.started,
-      type: quest.type,
-      id: quest._id,
-      activationCode: quest.activationCode
-    }
-  }*/
-
 questsRouter.get('/', (request, response) => {
     Quest
         .find({})
@@ -121,8 +107,9 @@ questsRouter.put('/start/:id', async (request, response) => {
             }
         }
         let userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-
         let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
+
+        const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
 
@@ -130,60 +117,91 @@ questsRouter.put('/start/:id', async (request, response) => {
 
         if (userQuestIds.includes(startedQuest._id.toString())) {
 
-            return response.status(500).send({error: 'Quest already started'})
+            return response.status(400).send({ error: 'Quest already started' })
         }
 
-        user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: Date.now(), finishTime: null }])
-        await user.save()
+        user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: dateNow, finishTime: null }])
 
-        startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: Date.now(), finishTime: null }])
+        startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: dateNow, finishTime: null }])
+        
+        await user.save()
         await startedQuest.save()
 
         response.status(200).send(user)
 
-    } catch(error){
+    } catch (error) {
         response.status(400).send({ error: 'Oops... something went wrong. :(' })
     }
 })
 
 
 questsRouter.put('/finish/:id', async (request, response) => {
-    /* Currently works but I don't know why (array mutation)
-        no restrictions yet
-        TMC authentication should be cleaner (own module) */
+    /* TMC authentication should be cleaner (own module) */
+    /*finishedQuests = finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
+        .map(quest => {
+            const newQuest = quest
+            newQuest.finishTime = Date.now()
+            return newQuest
+        }) */
 
     //This one starts the quest
     //Requires logged in user
-    //If quest id is not found, return error status
-    //If user does not have this quest, return error status
-    //If user has this quest already finished, don't do anything(?)
-    //Edit finished=true user.quests where quest id matches 
-    //Also add user to quest.usersFinished -- Keep usersStarted ?
+    //If quest id is not found, return error status x
+    //If user does not have this quest, return error status x
+    //If user has this quest already finished, return error status x
+    //MAKE MONGO SAVE ATOMIC
+    //Edit finishTime = dateNow user.quests where quest id matches 
+    //Also add user's finishTime to quest.usersStarted
+    try {
 
-    const config = {
-        headers: {
-            "Authorization": `bearer ${request.body.token}`,
-            "Content-Type": "application/json"
+        const config = {
+            headers: {
+                "Authorization": `bearer ${request.body.token}`,
+                "Content-Type": "application/json"
+            }
         }
+
+        const userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
+        let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
+        
+        const dateNow = Date.now()
+
+        //First add quest to user
+        let finishedQuests = user.quests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
+        let finishedQuestItem = finishedQuests[0]
+
+        if (!finishedQuestItem) {
+            return response.status(400).send({error: 'User has not started this quest'})
+        }
+
+        if (finishedQuestItem.finishTime !== null) {
+            return response.status(400).send({error: 'User has already finished this quest'})
+        }
+
+        finishedQuestItem.finishTime = dateNow
+
+        user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
+        user.quests = user.quests.concat(finishedQuestItem)
+
+        //Then add user to quest
+        let finishedQuest = await Quest.findById(request.params.id)
+        let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
+        let userCompletedItem = usersCompleted[0]
+
+        userCompletedItem.finishTime = dateNow
+        
+        finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
+        finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
+        
+        //Finally save to database and send response
+        await user.save()
+        await finishedQuest.save()
+        
+        response.status(200).send(user)
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({ error: 'Oooooops... something went wrong. :(' })
     }
-
-    const userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-    let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
-
-    let finishedQuests = user.quests
-
-    finishedQuests = await finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
-        .map(quest => {
-            const newQuest = quest
-            newQuest.finished = true
-            return newQuest
-        })
-
-    await user.save()
-
-    let finishedQuest = await Quest.findById(request.params.id)
-    finishedQuest.usersFinished = await finishedQuest.usersFinished.concat(user.id)
-    await finishedQuest.save()
 })
 
 module.exports = questsRouter
