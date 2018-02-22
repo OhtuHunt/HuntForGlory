@@ -49,8 +49,8 @@ const initialQuests = [
     }
 ]
 
-const questsInTestDb = async () => {
-    const quests = await Quest.find({})
+const questsInTestDb = () => {
+    const quests = Quest.find({})
     return quests
 }
 
