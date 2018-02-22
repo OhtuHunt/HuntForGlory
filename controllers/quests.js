@@ -23,7 +23,6 @@ questsRouter.get('/', (request, response) => {
         .populate('usersStarted', { username: 1, type: 1, tmc_id: 1 }) //what do we want here???
         .then(quests => {
             response.json(quests.map(Quest.format))
-            console.log(quests)
         })
         .catch(error => {
             console.log(error)

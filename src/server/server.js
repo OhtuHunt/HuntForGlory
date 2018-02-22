@@ -48,3 +48,7 @@ const error = (request, response) => {
 }
 
 app.use(error)
+
+module.exports = {
+  app, server
+}
