@@ -14,13 +14,39 @@ beforeAll(async () => {
     await Promise.all(promiseArray)
 })
 
-test('quests are returned as json', async () => {
-    await api
-      .get('/api/quests')
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-  })
-  
-  afterAll(() => {
+describe('API GET all from api/quests', async () => {
+
+    test('quests are returned as json', async () => {
+        await api
+            .get('/api/quests')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    })
+
+    test('all quests are returned', async () => {
+        const questsInDb = await questsInTestDb()
+
+        const response = await api
+            .get('/api/quests')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+        expect(response.body.length).toBe(questsInDb.length)
+
+    })
+
+    test('a specific quest is within the returned quests', async () => {
+        const response = await api
+            .get('/api/quests')
+
+        const questNames = response.body.map(r => r.name)
+
+        expect(questNames).toContain('Fun with Done')
+    })
+
+})
+
+
+
+afterAll(() => {
     server.close()
-  })
+})
