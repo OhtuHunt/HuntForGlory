@@ -193,6 +193,7 @@ questsRouter.put('/finish/:id', async (request, response) => {
         finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
         finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
         
+        user.points = user.points + finishedQuest.points
         //Finally save to database and send response
         await user.save()
         await finishedQuest.save()
