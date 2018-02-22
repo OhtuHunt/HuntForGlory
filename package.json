@@ -19,7 +19,8 @@
     "react-switch-card-module": "^1.0.2",
     "tmc-client-js": "0.0.7",
     "heroku-ssl-redirect": "0.0.4",
-    "supertest": "^3.0.0"
+    "supertest": "^3.0.0",
+    "jest": "^22.3.0"
   },
   "scripts": {
     "start": "node ./src/server/server.js",
