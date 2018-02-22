@@ -126,11 +126,10 @@ questsRouter.put('/start/:id', async (request, response) => {
 
     let startedQuest = await Quest.findById(request.params.id)
 
-    user.quests = await user.quests.concat([{ quest: startedQuest._id, startTime: request.body.startTime, finishTime: null }])
+    user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: request.body.startTime, finishTime: null }])
     await user.save()
 
-    startedQuest.usersStarted = await startedQuest.usersStarted.concat([{ user: user.id, startTime = request.body.startTime, finishTime: null }])
-    concat(user.id)
+    startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: request.body.startTime, finishTime: null }])
     await startedQuest.save()
 })
 
