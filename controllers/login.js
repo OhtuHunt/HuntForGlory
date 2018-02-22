@@ -16,7 +16,6 @@ loginRouter.post('/', async (request, response) => {
     }
     try {
         const res = await tmcClient.authenticate(param)
-        console.log(res)
         const config = {
             headers: {
                 "Authorization": `Bearer ${res.accessToken}`,
@@ -37,15 +36,15 @@ loginRouter.post('/', async (request, response) => {
             })
 
             const userToSave = await appUser.save()
-            return {user: userToSave, token: res.accessToken}
+            response.status(200).send({user: userToSave, token: res.accessToken})
         } else {
-            console.log(userById)
-            return {user: userById, token: res.accessToken}
+            console.log({user: userById, token: res.accessToken})
+            response.status(200).send({user: userById, token: res.accessToken})
         }
 
     } catch (e) {
         console.error(e);
-
+        response.status(400).send({ error: 'authentication failed' })
     } finally {
 
     }

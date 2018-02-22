@@ -23,6 +23,7 @@ questsRouter.get('/', (request, response) => {
         .populate('usersStarted', { username: 1, type: 1, tmc_id: 1 }) //what do we want here???
         .then(quests => {
             response.json(quests.map(Quest.format))
+            console.log(quests)
         })
         .catch(error => {
             console.log(error)
@@ -111,25 +112,39 @@ questsRouter.put('/start/:id', async (request, response) => {
     //Requires logged in user
     //If quest id is not found, return error status
     //If user has this quest, return error status
-    //Add quest and false to user.quests: quest ref and finished=false
-    //Also add user to quest.usersStarted
-    const config = {
-        headers: {
-            "Authorization": `bearer ${request.body.token}`,
-            "Content-Type": "application/json"
+    //Add quest and starttime to user.quests: quest ref and starttime=timestamp
+    //Also add user to quest.usersStarted and starttime
+    try {
+        const config = {
+            headers: {
+                "Authorization": `bearer ${request.body.token}`,
+                "Content-Type": "application/json"
+            }
         }
+        let userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
+
+        let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
+
+        let startedQuest = await Quest.findById(request.params.id)
+
+        const userQuestIds = user.quests.map(q => q.quest.toString())
+
+        if (userQuestIds.includes(startedQuest._id.toString())) {
+
+            return response.status(500).send({error: 'Quest already started'})
+        }
+
+        user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: Date.now(), finishTime: null }])
+        await user.save()
+
+        startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: Date.now(), finishTime: null }])
+        await startedQuest.save()
+
+        response.status(200).send(user)
+
+    } catch(error){
+        response.status(400).send({ error: 'Oops... something went wrong. :(' })
     }
-
-    const userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-    let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
-
-    let startedQuest = await Quest.findById(request.params.id)
-
-    user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: request.body.startTime, finishTime: null }])
-    await user.save()
-
-    startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: request.body.startTime, finishTime: null }])
-    await startedQuest.save()
 })
 
 
@@ -157,7 +172,7 @@ questsRouter.put('/finish/:id', async (request, response) => {
     let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
 
     let finishedQuests = user.quests
-    
+
     finishedQuests = await finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         .map(quest => {
             const newQuest = quest
@@ -167,7 +182,7 @@ questsRouter.put('/finish/:id', async (request, response) => {
 
     await user.save()
 
-    let finishedQuest = await Quest.findById(request.params.id) 
+    let finishedQuest = await Quest.findById(request.params.id)
     finishedQuest.usersFinished = await finishedQuest.usersFinished.concat(user.id)
     await finishedQuest.save()
 })
