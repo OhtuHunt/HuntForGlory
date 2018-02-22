@@ -37,10 +37,10 @@ loginRouter.post('/', async (request, response) => {
             })
 
             const userToSave = await appUser.save()
-            return userToSave
+            return {user: userToSave, token: res.accessToken}
         } else {
             console.log(userById)
-            return userById
+            return {user: userById, token: res.accessToken}
         }
 
     } catch (e) {

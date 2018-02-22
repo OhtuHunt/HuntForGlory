@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
     quests: [
         {
             quest: { type: mongoose.Schema.Types.ObjectId, ref: 'Quest' },
-            finished: Boolean
+            startTime: Date,
+            finishTime: Date
         }]
 })
 

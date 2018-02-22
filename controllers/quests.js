@@ -20,8 +20,7 @@ const axios = require('axios')
 questsRouter.get('/', (request, response) => {
     Quest
         .find({})
-        .populate('usersStarted', { username: 1, type: 1, tmc_id: 1 })
-        .populate('usersFinished', { username: 1, type: 1, tmc_id: 1 })
+        .populate('usersStarted', { username: 1, type: 1, tmc_id: 1 }) //what do we want here???
         .then(quests => {
             response.json(quests.map(Quest.format))
             console.log(quests)
@@ -127,10 +126,11 @@ questsRouter.put('/start/:id', async (request, response) => {
 
     let startedQuest = await Quest.findById(request.params.id)
 
-    user.quests = await user.quests.concat([{ quest: startedQuest._id, finished: false }])
+    user.quests = await user.quests.concat([{ quest: startedQuest._id, startTime: request.body.startTime, finishTime: null }])
     await user.save()
 
-    startedQuest.usersStarted = await startedQuest.usersStarted.concat(user.id)
+    startedQuest.usersStarted = await startedQuest.usersStarted.concat([{ user: user.id, startTime = request.body.startTime, finishTime: null }])
+    concat(user.id)
     await startedQuest.save()
 })
 

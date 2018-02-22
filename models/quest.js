@@ -8,8 +8,12 @@ const questSchema = new mongoose.Schema({
     done: Boolean,
     started: Boolean,
     activationCode: String,
-    usersStarted: [ { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' } ],
-    usersFinished: [ { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' } ]
+    usersStarted: [
+        {
+            user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' },
+            startTime: Date,
+            finishTime: Date
+        }]
 })
 
 questSchema.statics.format = (quest) => {
@@ -22,8 +26,7 @@ questSchema.statics.format = (quest) => {
         done: quest.done,
         started: quest.started,
         activationCode: quest.activationCode,
-        usersStarted: quest.usersStarted,
-        usersFinished: quest.usersFinished
+        usersStarted: quest.usersStarted
     }
 }
 
