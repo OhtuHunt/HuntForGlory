@@ -2,6 +2,7 @@ const questsRouter = require('express').Router()
 const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
 const axios = require('axios')
+const tmcAuth = require('../utils/tmcAuth')
 
 questsRouter.get('/', (request, response) => {
     Quest
@@ -34,6 +35,7 @@ questsRouter.get('/:id', (request, response) => {
 
 
 questsRouter.post('/', (request, response) => {
+    //Add admin restriction
     const body = request.body
     if (body === undefined) {
         return response.status(400).json({ error: 'content missing' })
@@ -57,6 +59,7 @@ questsRouter.post('/', (request, response) => {
 })
 
 questsRouter.put('/:id', (request, response) => {
+    //Add admin restriction
     const body = request.body
 
     const quest = {
@@ -81,6 +84,7 @@ questsRouter.put('/:id', (request, response) => {
 })
 
 questsRouter.delete('/:id', (request, response) => {
+    //Add admin restriction
     Quest
         .findByIdAndRemove(request.params.id)
         .then(result => {
@@ -100,15 +104,8 @@ questsRouter.put('/start/:id', async (request, response) => {
     //Add quest and starttime to user.quests: quest ref and starttime=timestamp
     //Also add user to quest.usersStarted and starttime
     try {
-        const config = {
-            headers: {
-                "Authorization": `bearer ${request.body.token}`,
-                "Content-Type": "application/json"
-            }
-        }
-        let userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-        let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
 
+        let user = await tmcAuth.authenticate(request.body.token)
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
@@ -130,6 +127,7 @@ questsRouter.put('/start/:id', async (request, response) => {
         response.status(200).send(user)
 
     } catch (error) {
+        console.log(error)
         response.status(400).send({ error: 'Oops... something went wrong. :(' })
     }
 })
@@ -154,16 +152,7 @@ questsRouter.put('/finish/:id', async (request, response) => {
     //Also add user's finishTime to quest.usersStarted
     try {
 
-        const config = {
-            headers: {
-                "Authorization": `bearer ${request.body.token}`,
-                "Content-Type": "application/json"
-            }
-        }
-
-        const userFromTMC = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-        let user = await AppUser.findOne({ "tmc_id": userFromTMC.data.id })
-        
+        let user = await tmcAuth.authenticate(request.body.token)
         const dateNow = Date.now()
 
         //First add quest to user
@@ -182,7 +171,10 @@ questsRouter.put('/finish/:id', async (request, response) => {
 
         user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
         user.quests = user.quests.concat(finishedQuestItem)
-
+        
+        //Add points to user here
+        user.points = user.points + finishedQuest.points
+        
         //Then add user to quest
         let finishedQuest = await Quest.findById(request.params.id)
         let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
@@ -193,7 +185,6 @@ questsRouter.put('/finish/:id', async (request, response) => {
         finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
         finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
         
-        user.points = user.points + finishedQuest.points
         //Finally save to database and send response
         await user.save()
         await finishedQuest.save()

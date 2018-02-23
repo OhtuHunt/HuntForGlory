@@ -8,9 +8,10 @@ const formatUser = (user) => {
 }
 
 usersRouter.get('/', async (request, response) => {
+    //Should this be possible only for admin?
     const users = await AppUser
         .find({})
-        .populate('quests.quest', { name: 1, type: 1, points: 1 } )
+        .populate('quests.quest', { name: 1, type: 1, points: 1 } ) //what do we want here?
     try {
         response.json(users)
         console.log(users)
