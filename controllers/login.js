@@ -1,5 +1,6 @@
 const loginRouter = require('express').Router()
 const AppUser = require('../models/app_user')
+const tmcAuth = require('../utils/tmcAuth')
 
 require('es6-promise').polyfill();
 const fetch = require('isomorphic-fetch');
@@ -16,15 +17,7 @@ loginRouter.post('/', async (request, response) => {
     }
     try {
         const res = await tmcClient.authenticate(param)
-        const config = {
-            headers: {
-                "Authorization": `Bearer ${res.accessToken}`,
-                "Content-Type": "application/json"
-            }
-        }
-        
-        const user = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-        const userById = await AppUser.findOne({ "tmc_id": user.data.id })
+        const userById = await tmcAuth.authenticate(res.accessToken)
 
         if (userById === null) {
             const appUser = new AppUser({
