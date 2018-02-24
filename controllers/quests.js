@@ -12,33 +12,25 @@ const parseToken = (request) => {
     return null
 }
 
-questsRouter.get('/', (request, response) => {
-    Quest
-        .find({})
-        .populate('usersStarted', { username: 1, type: 1, tmc_id: 1 }) //what do we want here???
-        .then(quests => {
-            response.json(quests.map(Quest.format))
-        })
-        .catch(error => {
-            console.log(error)
-            response.status(400).end()
-        })
+questsRouter.get('/', async (request, response) => {
+    try {
+        const quests = await Quest.find({}).populate('usersStarted', { username: 1, type: 1, tmc_id: 1 })
+        response.status(200).send(quests.map(Quest.format))
+
+    } catch (error) {
+        console.log(error)
+        response.status(500).send({error: 'something went wrong'})
+    }
 })
 
-questsRouter.get('/:id', (request, response) => {
-    Quest
-        .findById(request.params.id)
-        .then(quest => {
-            if (quest) {
-                response.json(Quest.format(quest))
-            } else {
-                response.status(404).end()
-            }
-        })
-        .catch(error => {
-            console.log(error)
-            response.status(400).send({ error: 'malformatted id' })
-        })
+questsRouter.get('/:id', async (request, response) => {
+    try {
+        const quest = await Quest.findById(request.params.id)
+        response.status(200).send(Quest.format(quest))
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({error: 'malformatted id'})
+    }
 })
 
 
@@ -74,8 +66,9 @@ questsRouter.post('/', async (request, response) => {
     }
 })
 
-questsRouter.put('/:id', (request, response) => {
+questsRouter.put('/:id', async (request, response) => {
     //Add admin restriction
+    try {
     const body = request.body
 
     const quest = {
@@ -88,28 +81,24 @@ questsRouter.put('/:id', (request, response) => {
         activationCode: body.activationCode
     }
 
-    Quest
-        .findByIdAndUpdate(request.params.id, quest, { new: true })
-        .then(updatedQuest => {
-            response.json(Quest.format(updatedQuest))
-        })
-        .catch(error => {
-            console.log(error)
-            response.status(400).send({ error: 'malformatted id' })
-        })
+    const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, {new: true})
+    response.status(200).send(Quest.format(updatedQuest))
+
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({error: 'malformatted id'})
+    }
 })
 
-questsRouter.delete('/:id', (request, response) => {
+questsRouter.delete('/:id', async (request, response) => {
     //Add admin restriction
-    Quest
-        .findByIdAndRemove(request.params.id)
-        .then(result => {
-            response.status(204).end()
-        })
-        .catch(error => {
-            console.log(error)
-            response.status(400).send({ error: 'malformatted id' })
-        })
+    try {
+        await Quest.findByIdAndRemove(request.params.id)
+        response.status(200).end()
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({error: 'malformatted id'})
+    }
 })
 
 questsRouter.put('/start/:id', async (request, response) => {
