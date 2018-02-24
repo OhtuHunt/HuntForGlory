@@ -54,8 +54,6 @@ const questsInTestDb = async () => {
     return quests
 }
 
-
-
 module.exports = {
     initialQuests, questsInTestDb
   }

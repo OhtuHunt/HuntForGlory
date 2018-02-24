@@ -4,6 +4,14 @@ const AppUser = require('../models/app_user')
 const axios = require('axios')
 const tmcAuth = require('../utils/tmcAuth')
 
+const parseToken = (request) => {
+    const authorization = request.get('authorization')
+    if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+        return authorization.substring(7)
+    }
+    return null
+}
+
 questsRouter.get('/', (request, response) => {
     Quest
         .find({})
@@ -34,28 +42,36 @@ questsRouter.get('/:id', (request, response) => {
 })
 
 
-questsRouter.post('/', (request, response) => {
-    //Add admin restriction
-    const body = request.body
-    if (body === undefined) {
-        return response.status(400).json({ error: 'content missing' })
-    }
-    const quest = new Quest({
-        name: body.name,
-        description: body.description,
-        points: body.points,
-        type: body.type,
-        done: body.done,
-        started: body.started,
-        activationCode: body.activationCode
-    })
+questsRouter.post('/', async (request, response) => {
+    try {
+        let token = parseToken(request)
+        let user = await tmcAuth.authenticate(token)
 
-    quest
-        .save()
-        .then(Quest.format)
-        .then(savedAndFormattedQuest => {
-            response.json(savedAndFormattedQuest)
+        if (!user.admin) {
+            return response.status(400).send({ error: 'Admin priviledges needed' })
+        }
+
+        const body = request.body
+        if (body === undefined) {
+            return response.status(400).json({ error: 'content missing' })
+        }
+        const quest = new Quest({
+            name: body.name,
+            description: body.description,
+            points: body.points,
+            type: body.type,
+            done: body.done,
+            started: body.started,
+            activationCode: body.activationCode
         })
+
+        const savedQuest = await quest.save()
+        response.status(200).send(Quest.format(savedQuest))
+
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({ error: 'something went wrong...' })
+    }
 })
 
 questsRouter.put('/:id', (request, response) => {
@@ -120,7 +136,7 @@ questsRouter.put('/start/:id', async (request, response) => {
         user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: dateNow, finishTime: null }])
 
         startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: dateNow, finishTime: null }])
-        
+
         await user.save()
         await startedQuest.save()
 
@@ -160,35 +176,35 @@ questsRouter.put('/finish/:id', async (request, response) => {
         let finishedQuestItem = finishedQuests[0]
 
         if (!finishedQuestItem) {
-            return response.status(400).send({error: 'User has not started this quest'})
+            return response.status(400).send({ error: 'User has not started this quest' })
         }
 
         if (finishedQuestItem.finishTime !== null) {
-            return response.status(400).send({error: 'User has already finished this quest'})
+            return response.status(400).send({ error: 'User has already finished this quest' })
         }
 
         finishedQuestItem.finishTime = dateNow
 
         user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
         user.quests = user.quests.concat(finishedQuestItem)
-        
+
         //Add points to user here
         user.points = user.points + finishedQuest.points
-        
+
         //Then add user to quest
         let finishedQuest = await Quest.findById(request.params.id)
         let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
         let userCompletedItem = usersCompleted[0]
 
         userCompletedItem.finishTime = dateNow
-        
+
         finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
         finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
-        
+
         //Finally save to database and send response
         await user.save()
         await finishedQuest.save()
-        
+
         response.status(200).send(user)
     } catch (error) {
         console.log(error)

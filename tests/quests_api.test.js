@@ -3,6 +3,7 @@ const supertest = require('supertest')
 const { initialQuests, questsInTestDb } = require('./test_helper')
 const { app, server } = require('../src/server/server')
 const api = supertest(app)
+jest.mock('../utils/tmcAuth')
 
 beforeAll(async () => {
 
@@ -47,20 +48,20 @@ describe('API GET all from api/quests', async () => {
 
 describe('POST, adding a new quest to api/quests', async () => {
 
-test('Adding a new quest', async () => {
-    const questsInDb = await questsInTestDb() 
+    test('works when user is admin', async () => {
+        const questsInDb = await questsInTestDb()
 
-    const newQuest = {
-        name: "a new quest",
-        description: "Testing POST",
-        points: 150,
-        type: "Solo-quest",
-        done: true,
-        started: true,
-        activationCode: "post"
-    }
+        const newQuest = {
+            name: "a new quest",
+            description: "Testing POST",
+            points: 150,
+            type: "Solo-quest",
+            done: true,
+            started: true,
+            activationCode: "post"
+        }
 
-    await api
+        await api
             .post('/api/quests')
             .send(newQuest)
             .expect(200)
@@ -69,11 +70,15 @@ test('Adding a new quest', async () => {
         const response = await api
             .get('/api/quests')
 
-            const questNames = response.body.map(r => r.name)
-            expect(questNames).toContain('a new quest')
+        const questNames = response.body.map(r => r.name)
+        expect(questNames).toContain('a new quest')
 
         expect(response.body.length).toBe(questsInDb.length + 1)
-})
+    })
+
+    test('doesnt work when user is not admin (TO BE IMPLEMENTED)', async () => {
+        expect(1).toBe(1)
+    })
 
 })
 
