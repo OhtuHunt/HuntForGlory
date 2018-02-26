@@ -1,8 +1,8 @@
 const tmcAuth = require('./tmcAuth') 
 
 const check = async (request) => {
-    try {
-        
+    try { 
+
         const authorization = request.get('authorization')
         if (!(authorization && authorization.toLowerCase().startsWith('bearer '))) {
             return false

@@ -46,38 +46,69 @@ describe('API GET all from api/quests', async () => {
 
 })
 
-describe('POST, adding a new quest to api/quests', async () => {
+describe.only('POST, adding a new quest to api/quests', async () => {
+    
+    describe('if user is admin', async () => {
 
-    /*test('works when user is admin', async () => {
-        const questsInDb = await questsInTestDb()
+        test('quest is added', async () => {
 
-        const newQuest = {
-            name: "a new quest",
-            description: "Testing POST",
-            points: 150,
-            type: "Solo-quest",
-            done: true,
-            started: true,
-            activationCode: "post"
-        }
+            const questsInDb = await questsInTestDb()
 
-        await api
-            .post('/api/quests')
-            .send(newQuest)
-            .expect(200)
-            .expect('Content-Type', /application\/json/)
+            const newQuest = {
+                name: "a new quest",
+                description: "Testing POST",
+                points: 150,
+                type: "Solo-quest",
+                done: true,
+                started: true,
+                activationCode: "post"
+            }
 
-        const response = await api
-            .get('/api/quests')
+            await api
+                .post('/api/quests')
+                .set('Authorization', `bearer admin`)
+                .send(newQuest)
+                .expect(200)
+                .expect('Content-Type', /application\/json/)
 
-        const questNames = response.body.map(r => r.name)
-        expect(questNames).toContain('a new quest')
+            const response = await api
+                .get('/api/quests')
 
-        expect(response.body.length).toBe(questsInDb.length + 1)
-    })*/
+            const questNames = response.body.map(r => r.name)
+            expect(questNames).toContain('a new quest')
 
-    test('doesnt work when user is not admin (TO BE IMPLEMENTED)', async () => {
-        expect(1).toBe(1)
+            expect(response.body.length).toBe(questsInDb.length + 1)
+        })
+    })
+
+
+    describe('if user is not admin', async () => {
+        
+        test('quest is not added', async () => {
+            
+            jest.doMock('../utils/adminCheck')
+
+            const api = supertest(app)
+            
+            const questsInDb = await questsInTestDb()
+
+            const newQuest = {
+                name: "a new quest",
+                description: "Testing POST",
+                points: 150,
+                type: "Solo-quest",
+                done: true,
+                started: true,
+                activationCode: "post"
+            }
+
+            await api
+                .post('/api/quests')
+                .set('Authorization', `bearer testitoken`)
+                .send(newQuest)
+                .expect(400)
+        })
+
     })
 
 })
