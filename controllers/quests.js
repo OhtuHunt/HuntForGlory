@@ -20,7 +20,7 @@ questsRouter.get('/', async (request, response) => {
 
     } catch (error) {
         console.log(error)
-        response.status(500).send({error: 'something went wrong'})
+        response.status(500).send({ error: 'something went wrong' })
     }
 })
 
@@ -30,7 +30,7 @@ questsRouter.get('/:id', async (request, response) => {
         response.status(200).send(Quest.format(quest))
     } catch (error) {
         console.log(error)
-        response.status(400).send({error: 'malformatted id'})
+        response.status(400).send({ error: 'malformatted id' })
     }
 })
 
@@ -69,29 +69,32 @@ questsRouter.post('/', async (request, response) => {
 questsRouter.put('/:id', async (request, response) => {
     //Add admin restriction
     try {
-    const body = request.body
 
-    const quest = {
-        name: body.name,
-        description: body.description,
-        points: body.points,
-        type: body.type,
-        done: body.done,
-        started: body.started,
-        activationCode: body.activationCode
-    }
+        if (await adminCheck.check(request) === false) {
+            return response.status(400).send({ error: 'Admin priviledges needed' })
+        }
+        const body = request.body
 
-    const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, {new: true})
-    response.status(200).send(Quest.format(updatedQuest))
+        const quest = {
+            name: body.name,
+            description: body.description,
+            points: body.points,
+            type: body.type,
+            done: body.done,
+            started: body.started,
+            activationCode: body.activationCode
+        }
+
+        const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
+        response.status(200).send(Quest.format(updatedQuest))
 
     } catch (error) {
         console.log(error)
-        response.status(400).send({error: 'malformatted id'})
+        response.status(400).send({ error: 'malformatted id' })
     }
 })
 
 questsRouter.delete('/:id', async (request, response) => {
-    //Add admin restriction
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'Admin priviledges needed' })
@@ -100,7 +103,7 @@ questsRouter.delete('/:id', async (request, response) => {
         response.status(200).end()
     } catch (error) {
         console.log(error)
-        response.status(400).send({error: 'malformatted id'})
+        response.status(400).send({ error: 'malformatted id' })
     }
 })
 
