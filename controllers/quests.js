@@ -3,6 +3,7 @@ const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
 const axios = require('axios')
 const tmcAuth = require('../utils/tmcAuth')
+const adminCheck = require('../utils/adminCheck')
 
 const parseToken = (request) => {
     const authorization = request.get('authorization')
@@ -36,10 +37,9 @@ questsRouter.get('/:id', async (request, response) => {
 
 questsRouter.post('/', async (request, response) => {
     try {
-        let token = parseToken(request)
-        let user = await tmcAuth.authenticate(token)
-
-        if (!user.admin) {
+        //let token = parseToken(request)
+        //let user = await tmcAuth.authenticate(token)
+        if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'Admin priviledges needed' })
         }
 
@@ -93,6 +93,9 @@ questsRouter.put('/:id', async (request, response) => {
 questsRouter.delete('/:id', async (request, response) => {
     //Add admin restriction
     try {
+        if (await adminCheck.check(request) === false) {
+            return response.status(400).send({ error: 'Admin priviledges needed' })
+        }
         await Quest.findByIdAndRemove(request.params.id)
         response.status(200).end()
     } catch (error) {

@@ -48,7 +48,7 @@ describe('API GET all from api/quests', async () => {
 
 describe('POST, adding a new quest to api/quests', async () => {
 
-    test('works when user is admin', async () => {
+    /*test('works when user is admin', async () => {
         const questsInDb = await questsInTestDb()
 
         const newQuest = {
@@ -74,7 +74,7 @@ describe('POST, adding a new quest to api/quests', async () => {
         expect(questNames).toContain('a new quest')
 
         expect(response.body.length).toBe(questsInDb.length + 1)
-    })
+    })*/
 
     test('doesnt work when user is not admin (TO BE IMPLEMENTED)', async () => {
         expect(1).toBe(1)
