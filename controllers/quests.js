@@ -162,6 +162,7 @@ questsRouter.put('/finish/:id', async (request, response) => {
     //Edit finishTime = dateNow user.quests where quest id matches 
     //Also add user's finishTime to quest.usersStarted
     try {
+        // request.body.activationCode
 
         let user = await tmcAuth.authenticate(request.body.token)
         const dateNow = Date.now()
@@ -169,6 +170,13 @@ questsRouter.put('/finish/:id', async (request, response) => {
         //First add quest to user
         let finishedQuests = user.quests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         let finishedQuestItem = finishedQuests[0]
+
+
+        const questToCheck = await Quest.findById(finishedQuestItem.quest)
+
+        if (questToCheck.activationCode !== request.body.activationCode) {
+            return response.status(400).send({ error: 'Wrong activationcode' })
+        }
 
         if (!finishedQuestItem) {
             return response.status(400).send({ error: 'User has not started this quest' })
@@ -183,11 +191,11 @@ questsRouter.put('/finish/:id', async (request, response) => {
         user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
         user.quests = user.quests.concat(finishedQuestItem)
 
-        //Add points to user here
-        user.points = user.points + finishedQuest.points
 
         //Then add user to quest
         let finishedQuest = await Quest.findById(request.params.id)
+        //Add points to user here
+        user.points = user.points + finishedQuest.points
         let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
         let userCompletedItem = usersCompleted[0]
 
