@@ -230,7 +230,7 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
     })
 
     test('if user has started quest, user can complete it', async () => {
-        /*const quest = new Quest({
+        const quest = new Quest({
             name: "STARTED QUEST",
             description: "THIS QUEST HAS BEEN STARTED ALREADY",
             points: 5,
@@ -238,24 +238,18 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
             done: false,
             started: false,
             activationCode: "STARTED",
-            usersStarted: []
+            usersStarted: [{ _id: "5a981abbabd1a43cd4055f7c",
+                user: "5a85756ef41b1a447acce08a",
+                startTime: "2018-03-01T15:22:35.445Z",
+                finishTime: null }]
         })
         const savedQuest = await quest.save()
 
-        const user = await api
-            .put(`/api/quests/start/${savedQuest._id}`)
-            .set('Authorization', 'bearer testitoken')
-            .expect(200)
-        console.log(user.body)
-        console.log(await Quest.findById(savedQuest._id))
         await api
             .put(`/api/quests/finish/${savedQuest._id}`)
-            .set('Authorization', 'bearer testitoken')
+            .set('Authorization', `bearer hasQuestStarted ${savedQuest._id}`)
             .send({activationCode: "STARTED"})
-            .expect(200) */
-
-            expect(1).toBe(1)
-
+            .expect(200)
     })
 })
 

@@ -131,14 +131,12 @@ questsRouter.put('/start/:id', async (request, response) => {
     try {
 
         let user = await tmcAuth.authenticate(parseToken(request))
-        console.log(user)
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
 
         const userQuestIds = user.quests.map(q => q.quest.toString())
         const questUserIds = startedQuest.usersStarted.map(u => u.user.toString())
-        console.log(startedQuest.usersStarted)
         
         if (userQuestIds.includes(startedQuest._id.toString()) || questUserIds.includes(user.id.toString())) {
 
@@ -174,7 +172,7 @@ questsRouter.put('/finish/:id', async (request, response) => {
     //If quest id is not found, return error status x
     //If user does not have this quest, return error status x
     //If user has this quest already finished, return error status x
-    //MAKE MONGO SAVE ATOMIC
+    //MAKE MONGO SAVE ATOMIC?
     //Edit finishTime = dateNow user.quests where quest id matches 
     //Also add user's finishTime to quest.usersStarted
     try {
@@ -186,8 +184,6 @@ questsRouter.put('/finish/:id', async (request, response) => {
         //First add quest to user
         let finishedQuests = user.quests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         let finishedQuestItem = finishedQuests[0]
-
-        console.log(finishedQuests)
 
         const questToCheck = await Quest.findById(finishedQuestItem.quest)
         
@@ -211,11 +207,12 @@ questsRouter.put('/finish/:id', async (request, response) => {
 
         //Then add user to quest
         let finishedQuest = await Quest.findById(request.params.id)
+
         //Add points to user here
         user.points = user.points + finishedQuest.points
+
         let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
         let userCompletedItem = usersCompleted[0]
-
         userCompletedItem.finishTime = dateNow
 
         finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
