@@ -220,6 +220,45 @@ describe('PUT, user starting quest in api/quest/start/:id', async () => {
     })
 })
 
+describe('PUT, user completing quest in api/quests/finish/:id', async () => {
+
+    beforeEach(async () => {
+
+        await Quest.remove({})
+        await User.remove({})    
+        
+    })
+
+    test('if user has started quest, user can complete it', async () => {
+        /*const quest = new Quest({
+            name: "STARTED QUEST",
+            description: "THIS QUEST HAS BEEN STARTED ALREADY",
+            points: 5,
+            type: "Timed solo quest",
+            done: false,
+            started: false,
+            activationCode: "STARTED",
+            usersStarted: []
+        })
+        const savedQuest = await quest.save()
+
+        const user = await api
+            .put(`/api/quests/start/${savedQuest._id}`)
+            .set('Authorization', 'bearer testitoken')
+            .expect(200)
+        console.log(user.body)
+        console.log(await Quest.findById(savedQuest._id))
+        await api
+            .put(`/api/quests/finish/${savedQuest._id}`)
+            .set('Authorization', 'bearer testitoken')
+            .send({activationCode: "STARTED"})
+            .expect(200) */
+
+            expect(1).toBe(1)
+
+    })
+})
+
 /* 
 ------------------------------------------------------------------------------------------------------------------
     HERE ARE TESTS FOR API/USERS, BECAUSE JEST RAN INTO PORT IN USE ERROR

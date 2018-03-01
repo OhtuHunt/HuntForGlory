@@ -179,23 +179,24 @@ questsRouter.put('/finish/:id', async (request, response) => {
     //Also add user's finishTime to quest.usersStarted
     try {
         // request.body.activationCode
-
-        let user = await tmcAuth.authenticate(request.body.token)
+        
+        let user = await tmcAuth.authenticate(parseToken(request))
         const dateNow = Date.now()
-
+        
         //First add quest to user
         let finishedQuests = user.quests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         let finishedQuestItem = finishedQuests[0]
 
+        console.log(finishedQuests)
 
         const questToCheck = await Quest.findById(finishedQuestItem.quest)
+        
+        if (!finishedQuestItem) {
+            return response.status(400).send({ error: 'User has not started this quest' })
+        }
 
         if (questToCheck.activationCode !== request.body.activationCode) {
             return response.status(400).send({ error: 'Wrong activationcode' })
-        }
-
-        if (!finishedQuestItem) {
-            return response.status(400).send({ error: 'User has not started this quest' })
         }
 
         if (finishedQuestItem.finishTime !== null) {
