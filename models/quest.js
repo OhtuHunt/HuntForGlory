@@ -30,6 +30,19 @@ questSchema.statics.format = (quest) => {
     }
 }
 
+questSchema.statics.formatNonAdmin = (quest) => {
+    return {
+        id: quest._id,
+        name: quest.name,
+        description: quest.description,
+        points: quest.points,
+        type: quest.type,
+        done: quest.done,
+        started: quest.started,
+        usersStarted: quest.usersStarted
+    }
+}
+
 const Quest = mongoose.model('Quest', questSchema)
 
 module.exports = Quest

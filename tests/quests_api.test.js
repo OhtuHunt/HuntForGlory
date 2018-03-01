@@ -18,9 +18,35 @@ beforeAll(async () => {
 
 describe('API GET all from api/quests', async () => {
 
+    describe('when user is admin', async () => {
+        test('quests include activation code', async () => {
+            
+            const response = await api
+                .get('/api/quests')
+                .set('Authorization', `bearer admin`)
+            const questActivationCodes = response.body.map(r => r.activationCode)
+
+            expect(questActivationCodes).not.toContain(undefined)
+        })
+    })
+
+    describe('when user is not admin', async () => {
+        test('quests do not include activation code', async () => {
+            
+            const response = await api
+                .get('/api/quests')
+                .set('Authorization', `bearer regularUser`)
+            const questActivationCodes = response.body.map(r => r.activationCode)
+            questActivationCodes.forEach(element => {
+                expect(element).not.toBeDefined()
+            })
+        })
+    })
+
     test('quests are returned as json', async () => {
         await api
             .get('/api/quests')
+            .set('Authorization', `bearer moro`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
@@ -32,6 +58,7 @@ describe('API GET all from api/quests', async () => {
             .get('/api/quests')
             .expect(200)
             .expect('Content-Type', /application\/json/)
+
         expect(response.body.length).toBe(questsInDb.length)
 
     })
@@ -39,12 +66,43 @@ describe('API GET all from api/quests', async () => {
     test('a specific quest is within the returned quests', async () => {
         const response = await api
             .get('/api/quests')
-
         const questNames = response.body.map(r => r.name)
 
         expect(questNames).toContain('Fun with Done')
     })
 
+})
+
+describe('API GET single quest from api/quests/:id', async () => {
+    let quest
+    beforeEach(async () => {
+        const questsBefore = await questsInTestDb()
+        quest = questsBefore[0]
+    })
+
+    describe('when user is admin', async () => {
+        test('quest includes activation code', async () => {
+            
+            const response = await api
+                .get(`/api/quests/${quest._id}`)
+                .set('Authorization', `bearer admin`)
+            const resQuest = response.body
+
+            expect(resQuest.activationCode).not.toBe(undefined)
+        })
+    })
+
+    describe('when user is not admin', async () => {
+        test('quest does not include activation code', async () => {
+            
+            const response = await api
+                .get(`/api/quests${quest._id}`)
+                .set('Authorization', `bearer regularUser`)
+            const resQuest = response.body
+            
+            expect(resQuest.activationCode).toBe(undefined)
+        })
+    })
 })
 
 describe('POST, adding a new quest to api/quests', async () => {
@@ -114,7 +172,7 @@ describe('POST, adding a new quest to api/quests', async () => {
 
 })
 
-describe.only('PUT, user starting quest in api/quest/start/:id', async () => {
+describe('PUT, user starting quest in api/quest/start/:id', async () => {
 
     beforeEach(async () => {
 

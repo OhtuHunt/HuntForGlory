@@ -14,9 +14,15 @@ const parseToken = (request) => {
 }
 
 questsRouter.get('/', async (request, response) => {
+    //Does not require logged in user
     try {
-        const quests = await Quest.find({}).populate('usersStarted', { username: 1, type: 1, tmc_id: 1 })
-        response.status(200).send(quests.map(Quest.format))
+        const quests = await Quest.find({}).populate('usersStarted', { username: 1 })
+
+        if (await adminCheck.check(request) === true) {
+            return response.status(200).send(quests.map(Quest.format))
+        } else {
+            return response.status(200).send(quests.map(Quest.formatNonAdmin))
+        }
 
     } catch (error) {
         console.log(error)
@@ -25,9 +31,17 @@ questsRouter.get('/', async (request, response) => {
 })
 
 questsRouter.get('/:id', async (request, response) => {
+    //Does not require logged in user
     try {
         const quest = await Quest.findById(request.params.id)
-        response.status(200).send(Quest.format(quest))
+
+        if (await adminCheck.check(request) === true) {
+            return response.status(200).send(Quest.format(quest))
+        } else {
+            return response.status(200).send(Quest.formatNonAdmin(quest))
+        }
+        
+        
     } catch (error) {
         console.log(error)
         response.status(400).send({ error: 'malformatted id' })
@@ -116,7 +130,7 @@ questsRouter.put('/start/:id', async (request, response) => {
     //Also add user to quest.usersStarted and starttime
     try {
 
-        let user = await tmcAuth.authenticate(request.get('authorization').substring(7))
+        let user = await tmcAuth.authenticate(parseToken(request))
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
@@ -131,7 +145,6 @@ questsRouter.put('/start/:id', async (request, response) => {
         user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: dateNow, finishTime: null }])
 
         startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: dateNow, finishTime: null }])
-        console.log(user)
         await user.save()
         await startedQuest.save()
 

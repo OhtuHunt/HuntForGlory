@@ -26,7 +26,6 @@ const authenticate = async (token) => {
         }
     }
     const newUser = new AppUser(AppUser.format(user))
-    console.log(newUser)
     return newUser
 }
 
