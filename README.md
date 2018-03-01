@@ -9,17 +9,20 @@
 
 ### [Drive-folder](https://drive.google.com/open?id=10lK1HtHSuotmiAjwj4vCeRSRPuYMGMyj)
 
-### [Frontend](https://github.com/OhtuHunt/HuntForGloryFrontend)
-
-
+### [Frontend repository](https://github.com/OhtuHunt/HuntForGloryFrontend)
 
 ### [Documentation](https://github.com/OhtuHunt/HuntForGlory/blob/development/Documentation)
+
+### Technology
+
+Frontend is implemented with ReactJS, while backend uses Node.js.
 
 ### Running the app locally
 1. Clone the repository with `git clone git@github.com:OhtuHunt/HuntForGlory.git`.
 2. Change to the directory with `cd HuntForGlory/`.
 3. Install the dependencies with `npm install`.
-4. Run the app with `npm start`.
+4. Add .env file to contain your environment variables, see below.
+5. Run the app with `npm start`.
 
 ### Configuration
 
@@ -30,6 +33,10 @@ Environment variables:
 | DATABASE_URL  | Address of database, e.g. `mongodb://USERNAME:PASSWORD@dsNUMBER.mlab.com:PORT/DATABASE` |
 | PORT | Port used by the backend server |
 | NODE_ENV | Node environment, value can be `production`, `development` or `test`. |
+
+### Authentication
+
+Application uses [TMC-authentication](https://tmc.mooc.fi) to identify users. Therefore, you need to register to tmc in order to use the application. Authorization is done with OAuth2.
 
 ### [Deploying to heroku](https://devcenter.heroku.com/articles/getting-started-with-nodejs#introduction)
 
