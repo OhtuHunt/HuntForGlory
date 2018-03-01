@@ -8,7 +8,9 @@ const initialQuests = [
         type: "Solo-quest",
         done: false,
         started: true,
-        activationCode: "femma"
+        activationCode: "femma",
+        usersStarted: [],
+        usersFinished: []
     },
     {
         name: "Käy pajassa",
@@ -17,7 +19,9 @@ const initialQuests = [
         type: "Solo-location-quest",
         done: false,
         started: false,
-        activationCode: "pajahdus"
+        activationCode: "pajahdus",
+        usersStarted: [],
+        usersFinished: []
     },
     {
         name: "There is no I in a Team",
@@ -27,7 +31,9 @@ const initialQuests = [
         type: "Group-quest",
         done: false,
         started: true,
-        activationCode: "teamWORKS"
+        activationCode: "teamWORKS",
+        usersStarted: [],
+        usersFinished: []
     },
     {
         name: "Fun with Done",
@@ -36,7 +42,9 @@ const initialQuests = [
         type: "Solo-quest",
         done: true,
         started: true,
-        activationCode: "tehtyjo"
+        activationCode: "tehtyjo",
+        usersStarted: [],
+        usersFinished: []
     },
     {
         name: "Long long loooong",
@@ -45,7 +53,9 @@ const initialQuests = [
         type: "Timed solo quest",
         done: false,
         started: false,
-        activationCode: "Lorem Ipsumord"
+        activationCode: "Lorem Ipsumord",
+        usersStarted: [],
+        usersFinished: []
     }
 ]
 

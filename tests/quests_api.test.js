@@ -1,4 +1,5 @@
 const Quest = require('../models/quest')
+const User = require('../models/app_user')
 const supertest = require('supertest')
 const { initialQuests, questsInTestDb } = require('./test_helper')
 const { app, server } = require('../src/server/server')
@@ -46,8 +47,8 @@ describe('API GET all from api/quests', async () => {
 
 })
 
-describe.only('POST, adding a new quest to api/quests', async () => {
-    
+describe('POST, adding a new quest to api/quests', async () => {
+
     describe('if user is admin', async () => {
 
         test('quest is added', async () => {
@@ -83,13 +84,13 @@ describe.only('POST, adding a new quest to api/quests', async () => {
 
 
     describe('if user is not admin', async () => {
-        
+
         test('quest is not added', async () => {
-            
+
             jest.doMock('../utils/adminCheck')
 
             const api = supertest(app)
-            
+
             const questsInDb = await questsInTestDb()
 
             const newQuest = {
@@ -113,7 +114,37 @@ describe.only('POST, adding a new quest to api/quests', async () => {
 
 })
 
+describe.only('PUT, user starting quest in api/quest/start/:id', async () => {
 
+    beforeEach(async () => {
+
+        await Quest.remove({})
+        await User.remove({})
+
+        const questObjects = initialQuests.map(quest => new Quest(quest))
+        const promiseArray = await questObjects.map(quest => quest.save())
+        await Promise.all(promiseArray)
+
+        
+        
+    })
+
+    test('quest is started for user', async () => {
+        const questsBefore = await questsInTestDb()
+        const questToBeStarted = questsBefore[0]
+        expect(questToBeStarted.usersStarted.length).toBe(0)
+
+        const user = await api
+            .put(`/api/quests/start/${questToBeStarted._id}`)
+            .set('Authorization', 'bearer testitoken')
+            .expect(200)
+
+        const questsAfter = await questsInTestDb()
+        const questStarted = questsAfter.find(q => q._id.toString() === questToBeStarted._id.toString())
+
+        expect(questStarted.usersStarted.map(q => q.user.toString())).toContainEqual(user.body.id.toString())
+    })
+})
 
 afterAll(() => {
     server.close()

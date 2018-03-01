@@ -1,3 +1,5 @@
+const AppUser = require('../../models/app_user')
+
 const authenticate = async (token) => {
     let user
     if (token === 'admin') {
@@ -23,8 +25,9 @@ const authenticate = async (token) => {
             "__v": 4
         }
     }
-
-    return user
+    const newUser = new AppUser(AppUser.format(user))
+    console.log(newUser)
+    return newUser
 }
 
 module.exports = { authenticate }

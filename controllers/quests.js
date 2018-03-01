@@ -116,7 +116,7 @@ questsRouter.put('/start/:id', async (request, response) => {
     //Also add user to quest.usersStarted and starttime
     try {
 
-        let user = await tmcAuth.authenticate(request.body.token)
+        let user = await tmcAuth.authenticate(request.get('authorization').substring(7))
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
@@ -131,11 +131,11 @@ questsRouter.put('/start/:id', async (request, response) => {
         user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: dateNow, finishTime: null }])
 
         startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: dateNow, finishTime: null }])
-
+        console.log(user)
         await user.save()
         await startedQuest.save()
 
-        response.status(200).send(user)
+        response.status(200).send(AppUser.format(user))
 
     } catch (error) {
         console.log(error)
