@@ -131,13 +131,16 @@ questsRouter.put('/start/:id', async (request, response) => {
     try {
 
         let user = await tmcAuth.authenticate(parseToken(request))
+        console.log(user)
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
 
         const userQuestIds = user.quests.map(q => q.quest.toString())
-
-        if (userQuestIds.includes(startedQuest._id.toString())) {
+        const questUserIds = startedQuest.usersStarted.map(u => u.user.toString())
+        console.log(startedQuest.usersStarted)
+        
+        if (userQuestIds.includes(startedQuest._id.toString()) || questUserIds.includes(user.id.toString())) {
 
             return response.status(400).send({ error: 'Quest already started' })
         }

@@ -181,13 +181,11 @@ describe('PUT, user starting quest in api/quest/start/:id', async () => {
 
         const questObjects = initialQuests.map(quest => new Quest(quest))
         const promiseArray = await questObjects.map(quest => quest.save())
-        await Promise.all(promiseArray)
-
-        
+        await Promise.all(promiseArray)    
         
     })
 
-    test('quest is started for user', async () => {
+    test('if user hasnt started quest, quest is started for user', async () => {
         const questsBefore = await questsInTestDb()
         const questToBeStarted = questsBefore[0]
         expect(questToBeStarted.usersStarted.length).toBe(0)
@@ -201,6 +199,24 @@ describe('PUT, user starting quest in api/quest/start/:id', async () => {
         const questStarted = questsAfter.find(q => q._id.toString() === questToBeStarted._id.toString())
 
         expect(questStarted.usersStarted.map(q => q.user.toString())).toContainEqual(user.body.id.toString())
+    })
+
+    test('if user has started quest, user cant start it again', async () => {
+        const quest = new Quest({
+            name: "STARTED QUEST",
+            description: "THIS QUEST HAS BEEN STARTED ALREADY",
+            points: 5,
+            type: "Timed solo quest",
+            done: false,
+            started: false,
+            activationCode: "STARTED",
+            usersStarted: [{user: "5a85756ef41b1a447acce08a", startTime: Date.now(), finishTime: null}]
+        })
+        const savedQuest = await quest.save()
+        const user = await api
+            .put(`/api/quests/start/${savedQuest._id}`)
+            .set('Authorization', 'bearer testitoken')
+            .expect(400)
     })
 })
 

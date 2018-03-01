@@ -25,7 +25,7 @@ const authenticate = async (token) => {
             "__v": 4
         }
     }
-    const newUser = new AppUser(AppUser.format(user))
+    const newUser = new AppUser(user)
     return newUser
 }
 
