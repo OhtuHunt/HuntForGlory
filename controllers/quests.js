@@ -184,12 +184,12 @@ questsRouter.put('/finish/:id', async (request, response) => {
         //First add quest to user
         let finishedQuests = user.quests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         let finishedQuestItem = finishedQuests[0]
-
-        const questToCheck = await Quest.findById(finishedQuestItem.quest)
         
         if (!finishedQuestItem) {
             return response.status(400).send({ error: 'User has not started this quest' })
         }
+
+        const questToCheck = await Quest.findById(finishedQuestItem.quest)
 
         if (questToCheck.activationCode !== request.body.activationCode) {
             return response.status(400).send({ error: 'Wrong activationcode' })
