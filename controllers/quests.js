@@ -131,6 +131,7 @@ questsRouter.put('/start/:id', async (request, response) => {
     try {
 
         let user = await tmcAuth.authenticate(parseToken(request))
+        console.log(user)
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
