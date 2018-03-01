@@ -1,5 +1,7 @@
 const usersRouter = require('express').Router()
 const AppUser = require('../models/app_user')
+const tmcAuth = require('../utils/tmcAuth')
+const adminCheck = require('../utils/adminCheck')
 
 const formatUser = (user) => {
     return {
@@ -13,8 +15,12 @@ usersRouter.get('/', async (request, response) => {
         .find({})
         .populate('quests.quest', { name: 1, type: 1, points: 1 } ) //what do we want here?
     try {
-        response.json(users)
-        console.log(users)
+        if (await adminCheck.check(request) === true) {
+            return response.status(200).send(users.map(AppUser.format))
+        } else {
+            return response.status(200).send(users.map(AppUser.formatNonAdmin))
+        }
+        //response.json(users)
 
     } catch (error) {
         console.log(error)

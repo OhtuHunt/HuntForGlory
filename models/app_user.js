@@ -26,6 +26,16 @@ userSchema.statics.format = (user) => {
     }
 }
 
+userSchema.statics.formatNonAdmin = (user) => {
+    return {
+        id: user.id,
+        username: user.username,
+        points: user.points,
+        admin: user.admin,
+        quests: user.quests
+    }
+}
+
 const AppUser = mongoose.model('AppUser', userSchema)
 
 module.exports = AppUser

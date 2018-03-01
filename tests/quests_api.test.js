@@ -1,7 +1,7 @@
 const Quest = require('../models/quest')
 const User = require('../models/app_user')
 const supertest = require('supertest')
-const { initialQuests, questsInTestDb } = require('./test_helper')
+const { initialQuests, questsInTestDb, initialUsers, usersInTestDb } = require('./test_helper')
 const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
@@ -218,6 +218,100 @@ describe('PUT, user starting quest in api/quest/start/:id', async () => {
             .set('Authorization', 'bearer testitoken')
             .expect(400)
     })
+})
+
+/* 
+------------------------------------------------------------------------------------------------------------------
+    HERE ARE TESTS FOR API/USERS, BECAUSE JEST RAN INTO PORT IN USE ERROR
+------------------------------------------------------------------------------------------------------------------
+*/
+
+describe('API GET all from api/users', async () => {
+
+    beforeEach(async () => {
+
+        // Be sure to use test database
+        await User.remove({})
+    
+        const userObjects = initialUsers.map(user => new User(user))
+        const promiseArray = userObjects.map(user => user.save())
+        await Promise.all(promiseArray)
+    })
+
+    describe('when user is admin', async () => {
+        test('users include email', async () => {
+            
+            const response = await api
+                .get('/api/users')
+                .set('Authorization', `bearer admin`)
+            const userEmails = response.body.map(r => r.email)
+
+            expect(userEmails).not.toContain(undefined)
+        })
+
+        test('users include tmc id', async () => {
+            
+            const response = await api
+                .get('/api/users')
+                .set('Authorization', `bearer admin`)
+            const userTmcIds = response.body.map(r => r.tmc_id)
+
+            expect(userTmcIds).not.toContain(undefined)
+        })
+    })
+
+    describe('when user is not admin', async () => {
+        test('users do not include email', async () => {
+            
+            const response = await api
+                .get('/api/users')
+                .set('Authorization', `bearer regularUser`)
+            const userEmails = response.body.map(r => r.email)
+            userEmails.forEach(element => {
+                expect(element).not.toBeDefined()
+            })
+        })
+
+        test('users do not include tmc id', async () => {
+            
+            const response = await api
+                .get('/api/users')
+                .set('Authorization', `bearer regularUser`)
+            const userTmcIds = response.body.map(r => r.tmc_id)
+            userTmcIds.forEach(element => {
+                expect(element).not.toBeDefined()
+            })
+        })
+    })
+
+    test('users are returned as json', async () => {
+        await api
+            .get('/api/users')
+            .set('Authorization', `bearer regularUser`)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    })
+
+    test('all users are returned', async () => {
+        const usersInDb = await usersInTestDb()
+
+        const response = await api
+            .get('/api/users')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+
+        expect(response.body.length).toBe(usersInDb.length)
+
+    })
+
+    test('a specific user is within the returned users', async () => {
+        const response = await api
+            .get('/api/users')
+        const usernames = response.body.map(r => r.username)
+
+        expect(usernames).toContain('hunter')
+    })
+
 })
 
 afterAll(() => {
