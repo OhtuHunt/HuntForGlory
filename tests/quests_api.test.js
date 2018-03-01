@@ -302,7 +302,7 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
         expect(response.body.error).toEqual("Wrong activationcode")
     })
 
-    test('if user hasnt started quest, quest is started for user', async () => {
+    test('if user hasnt started quest, quest cannot be finished', async () => {
         const quest = new Quest({
             name: "STARTED QUEST",
             description: "THIS QUEST HAS BEEN STARTED ALREADY",
