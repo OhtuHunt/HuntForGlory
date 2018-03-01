@@ -251,6 +251,31 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
             .send({activationCode: "STARTED"})
             .expect(200)
     })
+
+    test('if user has completed a quest, he cannot complete it again', async () => {
+        const quest = new Quest({
+            name: "FINISHED QUEST",
+            description: "THIS QUEST HAS BEEN FINISHED ALREADY",
+            points: 5,
+            type: "Timed solo quest",
+            done: false,
+            started: false,
+            activationCode: "FINISHED",
+            usersStarted: [{ _id: "5a981abbabd1a43cd4055f7c",
+                user: "5a85756ef41b1a447acce08a",
+                startTime: "2018-03-01T15:22:35.445Z",
+                finishTime: "2018-03-01T16:24:37.445Z" }]
+        })
+        const savedQuest = await quest.save()
+
+        const response = await api
+            .put(`/api/quests/finish/${savedQuest._id}`)
+            .set('Authorization', `bearer hasQuestFinished ${savedQuest._id}`)
+            .send({activationCode: "FINISHED"})
+            .expect(400)
+        
+        expect(response.body.error).toEqual("User has already finished this quest")
+    })
 })
 
 /* 

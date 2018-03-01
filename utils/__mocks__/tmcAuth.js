@@ -42,10 +42,42 @@ const authenticate = async (token) => {
         await Quest.findByIdAndUpdate(token.substring(16),
             {   
                 usersStarted: [{
-                    _id: "5a981abbabd1a43cd4055f7c",
+                    _id: '5a981abbabd1a43cd4055f7c',
                     user: newUser._id,
-                    startTime: "2018-03-01T15:22:35.445Z",
+                    startTime: '2018-03-01T15:22:35.445Z',
                     finishTime: null
+                }]
+            })
+
+        return newUser
+
+    } else if (token.includes('hasQuestFinished')) {
+        //Again, return new database user and add its id to the quest that's in token
+        user = {
+            "id": '5a85756ef41b1a447acce08a',
+            "tmc_id": 25936,
+            "username": 'hunter',
+            "points": 0,
+            "email": 'gyxgyx@helsinki.fi',
+            "admin": false,
+            "quests":
+                [{
+                    _id: '5a981abbabd1a43cd4055f7b',
+                    quest: token.substring(17),
+                    startTime: '2018-03-01T15:22:35.445Z',
+                    finishTime:  '2018-03-01T16:24:37.445Z'
+                }]
+        }
+
+        const newUser = new AppUser(user)
+
+        await Quest.findByIdAndUpdate(token.substring(17),
+            {   
+                usersStarted: [{
+                    _id: '5a981abbabd1a43cd4055f7c',
+                    user: newUser._id,
+                    startTime: '2018-03-01T15:22:35.445Z',
+                    finishTime:  '2018-03-01T16:24:37.445Z'
                 }]
             })
 
