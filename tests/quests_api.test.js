@@ -172,7 +172,7 @@ describe('POST, adding a new quest to api/quests', async () => {
 
 })
 
-describe('PUT, user starting quest in api/quest/start/:id', async () => {
+describe('PUT, user starting quest in api/quest/:id/start', async () => {
 
     beforeEach(async () => {
 
@@ -191,7 +191,7 @@ describe('PUT, user starting quest in api/quest/start/:id', async () => {
         expect(questToBeStarted.usersStarted.length).toBe(0)
 
         const user = await api
-            .put(`/api/quests/start/${questToBeStarted._id}`)
+            .put(`/api/quests/${questToBeStarted._id}/start`)
             .set('Authorization', 'bearer testitoken')
             .expect(200)
 
@@ -214,13 +214,13 @@ describe('PUT, user starting quest in api/quest/start/:id', async () => {
         })
         const savedQuest = await quest.save()
         const user = await api
-            .put(`/api/quests/start/${savedQuest._id}`)
+            .put(`/api/quests/${savedQuest._id}/start`)
             .set('Authorization', 'bearer testitoken')
             .expect(400)
     })
 })
 
-describe('PUT, user completing quest in api/quests/finish/:id', async () => {
+describe('PUT, user completing quest in api/quests/:id/finish', async () => {
 
     beforeEach(async () => {
 
@@ -246,7 +246,7 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
         const savedQuest = await quest.save()
 
         await api
-            .put(`/api/quests/finish/${savedQuest._id}`)
+            .put(`/api/quests/${savedQuest._id}/finish`)
             .set('Authorization', `bearer hasQuestStarted ${savedQuest._id}`)
             .send({activationCode: "STARTED"})
             .expect(200)
@@ -269,7 +269,7 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
         const savedQuest = await quest.save()
 
         const response = await api
-            .put(`/api/quests/finish/${savedQuest._id}`)
+            .put(`/api/quests/${savedQuest._id}/finish`)
             .set('Authorization', `bearer hasQuestFinished ${savedQuest._id}`)
             .send({activationCode: "FINISHED"})
             .expect(400)
@@ -294,7 +294,7 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
         const savedQuest = await quest.save()
 
         const response = await api
-            .put(`/api/quests/finish/${savedQuest._id}`)
+            .put(`/api/quests/${savedQuest._id}/finish`)
             .set('Authorization', `bearer hasQuestStarted ${savedQuest._id}`)
             .send({activationCode: "TRIED"})
             .expect(400)
@@ -316,7 +316,7 @@ describe('PUT, user completing quest in api/quests/finish/:id', async () => {
         const savedQuest = await quest.save()
 
         const response = await api
-            .put(`/api/quests/finish/${savedQuest._id}`)
+            .put(`/api/quests/${savedQuest._id}/finish`)
             .set('Authorization', `bearer regularUser`)
             .send({activationCode: "STARTED"})
             .expect(400)

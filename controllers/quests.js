@@ -113,6 +113,19 @@ questsRouter.delete('/:id', async (request, response) => {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'Admin priviledges needed' })
         }
+        const questToBeDeleted = await Quest.findById(request.params.id)
+
+        if (!questToBeDeleted) {
+            return response.status(404).send({error: 'quest not found'})
+        }
+
+        const user = await tmcAuth.authenticate(parseToken(request))
+
+        const userQuests = user.quests.filter(q => q.quest.toString() !== questToBeDeleted._id.toString())
+
+        user.quests = userQuests
+
+        await user.save()
         await Quest.findByIdAndRemove(request.params.id)
         response.status(200).end()
     } catch (error) {
@@ -121,7 +134,7 @@ questsRouter.delete('/:id', async (request, response) => {
     }
 })
 
-questsRouter.put('/start/:id', async (request, response) => {
+questsRouter.put('/:id/start', async (request, response) => {
     //This one starts the quest
     //Requires logged in user
     //If quest id is not found, return error status
@@ -159,7 +172,7 @@ questsRouter.put('/start/:id', async (request, response) => {
 })
 
 
-questsRouter.put('/finish/:id', async (request, response) => {
+questsRouter.put('/:id/finish', async (request, response) => {
     /* TMC authentication should be cleaner (own module) */
     /*finishedQuests = finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         .map(quest => {
