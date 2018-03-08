@@ -13,6 +13,17 @@ const parseToken = (request) => {
     return null
 }
 
+const findUserAndRemoveQuest = async (userId, questToBeRemoved) => {
+	const user = await AppUser.findById(userId)
+	console.log(user)
+	const userQuests = user.quests.filter(q => q.quest.toString() !== questToBeRemoved._id.toString())
+	console.log(user)
+	console.log(userQuests)
+	user.quests = userQuests
+	console.log(user.quests)
+	await user.save()
+}
+
 questsRouter.get('/', async (request, response) => {
     //Does not require logged in user
     try {
@@ -138,19 +149,6 @@ questsRouter.post('/:id/deactivated', async (request, response) => {
 })
 
 questsRouter.delete('/:id', async (request, response) => {
-	//Here we should move quest to deleted quests collection from the current collection
-	//There they will have a new mongo ID, so we need to change the quest ID to userquest lists as well
-	//But then we would have to connect the new collection to the user in addition to quests
-		//or ignore this, and let only admin to be priviledged to see the deleted quests
-		//counting user's points for example based on quest category would be difficult
-	//We could just change quest's done property to deleted
-	//Then again we would have to filter in frontend or backend everytime we query them quests
-	//OR we could just add the deleted boolean, and deny any operations for such quests
-		//e.g. starting and finishing 
-		//requires additional if clause to these requests
-		//also should be handled in the frontend for example deactivating buttons and text field
-		//later of course colorcoding and filtering
-		//maybe add that if deleted = true and admin tries to delete again, it will be permanently deleted
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'Admin priviledges needed' })
@@ -161,13 +159,10 @@ questsRouter.delete('/:id', async (request, response) => {
             return response.status(404).send({error: 'quest not found'})
         }
 
-        const user = await tmcAuth.authenticate(parseToken(request))
+		questToBeDeleted.usersStarted.forEach( userObj => {
+			findUserAndRemoveQuest(userObj.user, questToBeDeleted)
+		})
 
-        const userQuests = user.quests.filter(q => q.quest.toString() !== questToBeDeleted._id.toString())
-
-        user.quests = userQuests
-
-        await user.save()
         await Quest.findByIdAndRemove(request.params.id)
         response.status(200).end()
     } catch (error) {
@@ -186,7 +181,6 @@ questsRouter.post('/:id/start', async (request, response) => {
     try {
 
         let user = await tmcAuth.authenticate(parseToken(request))
-        console.log(user)
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
