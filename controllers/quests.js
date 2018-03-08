@@ -17,11 +17,11 @@ questsRouter.get('/', async (request, response) => {
     //Does not require logged in user
     try {
         const quests = await Quest.find({}).populate('usersStarted', { username: 1 })
-
+        
         if (await adminCheck.check(request) === true) {
             return response.status(200).send(quests.map(Quest.format))
         } else {
-            return response.status(200).send(quests.map(Quest.formatNonAdmin))
+            return response.status(200).send(quests.map(Quest.formatNonAdmin).filter(q => q.deactivated === false))
         }
 
     } catch (error) {
@@ -68,7 +68,8 @@ questsRouter.post('/', async (request, response) => {
             type: body.type,
             done: body.done,
             started: body.started,
-            activationCode: body.activationCode
+            activationCode: body.activationCode,
+            deactivated: false
         })
 
         const savedQuest = await quest.save()
@@ -81,7 +82,6 @@ questsRouter.post('/', async (request, response) => {
 })
 
 questsRouter.put('/:id', async (request, response) => {
-    //Add admin restriction
     try {
 
         if (await adminCheck.check(request) === false) {
@@ -96,7 +96,8 @@ questsRouter.put('/:id', async (request, response) => {
             type: body.type,
             done: body.done,
             started: body.started,
-            activationCode: body.activationCode
+            activationCode: body.activationCode,
+            deactivated: body.deactivated
         }
 
         const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
@@ -105,6 +106,34 @@ questsRouter.put('/:id', async (request, response) => {
     } catch (error) {
         console.log(error)
         response.status(400).send({ error: 'malformatted id' })
+    }
+})
+
+questsRouter.post('/:id/deactivated', async (request, response) => {
+    try {
+        if (await adminCheck.check(request) === false) {
+            return response.status(400).send({error: 'Admin priviledges needed'})
+        }
+
+        const oldQuest = await Quest.findById(request.params.id)
+
+        const quest = {
+            name: oldQuest.name,
+            description: oldQuest.description,
+            points: oldQuest.points,
+            type: oldQuest.type,
+            done: oldQuest.done,
+            started: oldQuest.started,
+            activationCode: oldQuest.activationCode,
+            deactivated: true
+        }
+
+        const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, {new: true})
+        response.status(200).send(Quest.format(updatedQuest))
+
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({error: 'malformatted id'})
     }
 })
 
@@ -162,6 +191,10 @@ questsRouter.post('/:id/start', async (request, response) => {
 
         let startedQuest = await Quest.findById(request.params.id)
 
+        if (startedQuest.deactivated === true) {
+            return response.status(400).send({error: 'This quest is deactivated'})
+        }
+
         const userQuestIds = user.quests.map(q => q.quest.toString())
         const questUserIds = startedQuest.usersStarted.map(u => u.user.toString())
         
@@ -217,6 +250,10 @@ questsRouter.post('/:id/finish', async (request, response) => {
         }
 
         const questToCheck = await Quest.findById(finishedQuestItem.quest)
+
+        if (questToCheck.deactivated === true) {
+            return response.status(400).send({error: 'This quest is deactivated'})
+        }
 
         if (questToCheck.activationCode !== request.body.activationCode) {
             return response.status(400).send({ error: 'Wrong activationcode' })

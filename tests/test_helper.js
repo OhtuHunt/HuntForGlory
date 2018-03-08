@@ -11,7 +11,8 @@ const initialQuests = [
         started: true,
         activationCode: "femma",
         usersStarted: [],
-        usersFinished: []
+        usersFinished: [],
+        deactivated: false
     },
     {
         name: "Käy pajassa",
@@ -22,7 +23,8 @@ const initialQuests = [
         started: false,
         activationCode: "pajahdus",
         usersStarted: [],
-        usersFinished: []
+        usersFinished: [],
+        deactivated: false
     },
     {
         name: "There is no I in a Team",
@@ -34,7 +36,8 @@ const initialQuests = [
         started: true,
         activationCode: "teamWORKS",
         usersStarted: [],
-        usersFinished: []
+        usersFinished: [],
+        deactivated: false
     },
     {
         name: "Fun with Done",
@@ -45,7 +48,8 @@ const initialQuests = [
         started: true,
         activationCode: "tehtyjo",
         usersStarted: [],
-        usersFinished: []
+        usersFinished: [],
+        deactivated: false
     },
     {
         name: "Long long loooong",
@@ -56,7 +60,8 @@ const initialQuests = [
         started: false,
         activationCode: "Lorem Ipsumord",
         usersStarted: [],
-        usersFinished: []
+        usersFinished: [],
+        deactivated: false
     }
 ]
 

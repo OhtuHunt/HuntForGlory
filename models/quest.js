@@ -13,7 +13,8 @@ const questSchema = new mongoose.Schema({
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' },
             startTime: Date,
             finishTime: Date
-        }]
+        }],
+    deactivated: Boolean
 })
 
 questSchema.statics.format = (quest) => {
@@ -26,7 +27,8 @@ questSchema.statics.format = (quest) => {
         done: quest.done,
         started: quest.started,
         activationCode: quest.activationCode,
-        usersStarted: quest.usersStarted
+        usersStarted: quest.usersStarted,
+        deactivated: quest.deactivated
     }
 }
 
@@ -39,7 +41,8 @@ questSchema.statics.formatNonAdmin = (quest) => {
         type: quest.type,
         done: quest.done,
         started: quest.started,
-        usersStarted: quest.usersStarted
+        usersStarted: quest.usersStarted,
+        deactivated: quest.deactivated
     }
 }
 
