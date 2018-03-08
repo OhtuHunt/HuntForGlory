@@ -42,7 +42,7 @@ loginRouter.post('/', async (request, response) => {
             userById = await AppUser.findOne({ "tmc_id": userToSave.tmc_id })
         } 
 
-        response.status(200).send({user: userById, token: res.accessToken})
+        response.status(200).send({user: AppUser.format(userById), token: res.accessToken})
 
     } catch (e) {
         console.error(e);

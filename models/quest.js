@@ -18,7 +18,7 @@ const questSchema = new mongoose.Schema({
 
 questSchema.statics.format = (quest) => {
     return {
-        id: quest._id,
+        id: quest.id,
         name: quest.name,
         description: quest.description,
         points: quest.points,
@@ -32,7 +32,7 @@ questSchema.statics.format = (quest) => {
 
 questSchema.statics.formatNonAdmin = (quest) => {
     return {
-        id: quest._id,
+        id: quest.id,
         name: quest.name,
         description: quest.description,
         points: quest.points,

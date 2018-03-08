@@ -109,6 +109,19 @@ questsRouter.put('/:id', async (request, response) => {
 })
 
 questsRouter.delete('/:id', async (request, response) => {
+	//Here we should move quest to deleted quests collection from the current collection
+	//There they will have a new mongo ID, so we need to change the quest ID to userquest lists as well
+	//But then we would have to connect the new collection to the user in addition to quests
+		//or ignore this, and let only admin to be priviledged to see the deleted quests
+		//counting user's points for example based on quest category would be difficult
+	//We could just change quest's done property to deleted
+	//Then again we would have to filter in frontend or backend everytime we query them quests
+	//OR we could just add the deleted boolean, and deny any operations for such quests
+		//e.g. starting and finishing 
+		//requires additional if clause to these requests
+		//also should be handled in the frontend for example deactivating buttons and text field
+		//later of course colorcoding and filtering
+		//maybe add that if deleted = true and admin tries to delete again, it will be permanently deleted
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'Admin priviledges needed' })
@@ -134,7 +147,7 @@ questsRouter.delete('/:id', async (request, response) => {
     }
 })
 
-questsRouter.put('/:id/start', async (request, response) => {
+questsRouter.post('/:id/start', async (request, response) => {
     //This one starts the quest
     //Requires logged in user
     //If quest id is not found, return error status
@@ -172,7 +185,7 @@ questsRouter.put('/:id/start', async (request, response) => {
 })
 
 
-questsRouter.put('/:id/finish', async (request, response) => {
+questsRouter.post('/:id/finish', async (request, response) => {
     /* TMC authentication should be cleaner (own module) */
     /*finishedQuests = finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         .map(quest => {
@@ -236,7 +249,7 @@ questsRouter.put('/:id/finish', async (request, response) => {
         await user.save()
         await finishedQuest.save()
 
-        response.status(200).send(user)
+        response.status(200).send(AppUser.format(user))
     } catch (error) {
         console.log(error)
         response.status(400).send({ error: 'Oooooops... something went wrong. :(' })
