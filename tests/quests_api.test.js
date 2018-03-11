@@ -331,7 +331,7 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
     })
 })
 
-describe.only('Quest deactivation', async () => {
+describe('Quest deactivation', async () => {
 
     let activeQuest = null
     let notActiveQuest = null
