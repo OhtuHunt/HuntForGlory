@@ -331,7 +331,7 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
     })
 })
 
-describe('Quest deactivation', async () => {
+describe.only('Quest deactivation', async () => {
 
     let activeQuest = null
     let notActiveQuest = null
@@ -420,11 +420,6 @@ describe('Quest deactivation', async () => {
 
         expect(questBefore.deactivated).toBe(false)
 
-        const questjee = await api
-            .post(`/api/quests/${questBefore.id}/deactivated`)
-            .set('Authorization', 'bearer regularUser')
-            .expect(400)
-
         const questAfter = await api
             .get(`/api/quests/${questBefore.id}`)
             .set('Authorization', 'bearer regularUser')
@@ -450,11 +445,66 @@ describe('Quest deactivation', async () => {
     test('POST /api/quest/:id/start doesnt start a quest for user if the quest is deactived', async () => {
         const questBefore = await notActiveQuest.save()
 
-        const user = await api
+        const response = await api
             .post(`/api/quests/${questBefore._id}/start`)
             .set('Authorization', 'bearer testitoken')
             .expect(400)
-        expect(user.body.error).toEqual('This quest is deactivated')
+        expect(response.body.error).toEqual('This quest is deactivated')
+    })
+
+
+    test('POST /api/quest/:id/finish marks the active quest as finished if user gives the correct activation code and has started the quest', async () => {
+        const quest = new Quest({
+            name: "STARTED QUEST",
+            description: "THIS QUEST HAS BEEN STARTED ALREADY",
+            points: 5,
+            type: "Timed solo quest",
+            done: false,
+            started: false,
+            activationCode: "STARTED",
+            deactivated: false,
+            usersStarted: [{
+                _id: "5a981abbabd1a43cd4055f7c",
+                user: "5a85756ef41b1a447acce08a",
+                startTime: "2018-03-01T15:22:35.445Z",
+                finishTime: null
+            }]
+        })
+        const savedQuest = await quest.save()
+
+        const response = await api
+            .post(`/api/quests/${savedQuest._id}/finish`)
+            .set('Authorization', `bearer hasQuestStarted ${savedQuest._id}`)
+            .send({ activationCode: "STARTED" })
+            .expect(200)
+
+    })
+
+    test('POST /api/quest/:id/finish doesnt mark the inactive quest as finished if user gives the correct activation code and has started the quest', async () => {
+        const quest = new Quest({
+            name: "STARTED QUEST",
+            description: "THIS QUEST HAS BEEN STARTED ALREADY",
+            points: 5,
+            type: "Timed solo quest",
+            done: false,
+            started: false,
+            activationCode: "STARTED",
+            deactivated: true,
+            usersStarted: [{
+                _id: "5a981abbabd1a43cd4055f7c",
+                user: "5a85756ef41b1a447acce08a",
+                startTime: "2018-03-01T15:22:35.445Z",
+                finishTime: null
+            }]
+        })
+        const savedQuest = await quest.save()
+
+        const response = await api
+            .post(`/api/quests/${savedQuest._id}/finish`)
+            .set('Authorization', `bearer hasQuestStarted ${savedQuest._id}`)
+            .send({ activationCode: "STARTED" })
+            .expect(400)
+        expect(response.body.error).toEqual('This quest is deactivated')
     })
 })
 
