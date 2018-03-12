@@ -1,12 +1,15 @@
 const usersRouter = require('express').Router()
 const AppUser = require('../models/app_user')
+const Quest = require('../models/quest')
 const tmcAuth = require('../utils/tmcAuth')
 const adminCheck = require('../utils/adminCheck')
+const tokenParser = require('../utils/tokenParser')
 
-const formatUser = (user) => {
-    return {
-
-    }
+const findQuestAndRemoveUser = async (questId, userToBeRemoved) => {
+	const quest = await Quest.findById(questId)
+	const questUsers = quest.usersStarted.filter(u => u.user.toString() !== userToBeRemoved._id.toString())
+	quest.usersStarted = questUsers
+	await quest.save()
 }
 
 usersRouter.get('/', async (request, response) => {
@@ -25,6 +28,39 @@ usersRouter.get('/', async (request, response) => {
     } catch (error) {
         console.log(error)
         response.status(400).end()
+    }
+})
+
+usersRouter.delete('/:id', async (request, response) => {
+    try {
+		//Check if admin OR if user himself DONE
+		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+
+        if (await adminCheck.check(request) === false && user._id.toString() !== request.params.id.toString()) {
+			console.log(user._id)
+			console.log(request.params.id)
+            return response.status(400).send({ error: 'You are not authorized to do this' })
+		}
+		
+		//Get the user from database DONE
+        const userToBeDeleted = await AppUser.findById(request.params.id)
+
+		//Check that user actually exists DONE
+        if (!userToBeDeleted) {
+            return response.status(404).send({error: 'user not found'})
+        }
+
+		//Remove user from all the quests he has DONE
+		userToBeDeleted.quests.forEach( questObj => {
+			findQuestAndRemoveUser(questObj.quest, userToBeDeleted)
+		})
+
+		//Remove user from database based on the id DONE
+        await AppUser.findByIdAndRemove(request.params.id)
+        response.status(200).end()
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({ error: 'malformatted id' })
     }
 })
 

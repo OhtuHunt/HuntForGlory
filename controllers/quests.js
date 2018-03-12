@@ -4,23 +4,12 @@ const AppUser = require('../models/app_user')
 const axios = require('axios')
 const tmcAuth = require('../utils/tmcAuth')
 const adminCheck = require('../utils/adminCheck')
-
-const parseToken = (request) => {
-    const authorization = request.get('authorization')
-    if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-        return authorization.substring(7)
-    }
-    return null
-}
+const tokenParser = require('../utils/tokenParser')
 
 const findUserAndRemoveQuest = async (userId, questToBeRemoved) => {
 	const user = await AppUser.findById(userId)
-	console.log(user)
 	const userQuests = user.quests.filter(q => q.quest.toString() !== questToBeRemoved._id.toString())
-	console.log(user)
-	console.log(userQuests)
 	user.quests = userQuests
-	console.log(user.quests)
 	await user.save()
 }
 
@@ -149,6 +138,7 @@ questsRouter.post('/:id/deactivated', async (request, response) => {
 })
 
 questsRouter.delete('/:id', async (request, response) => {
+	//This does not reduce points from users
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'Admin priviledges needed' })
@@ -180,7 +170,7 @@ questsRouter.post('/:id/start', async (request, response) => {
     //Also add user to quest.usersStarted and starttime
     try {
 
-        let user = await tmcAuth.authenticate(parseToken(request))
+        let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
         const dateNow = Date.now()
 
         let startedQuest = await Quest.findById(request.params.id)
@@ -232,7 +222,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
     try {
         // request.body.activationCode
         
-        let user = await tmcAuth.authenticate(parseToken(request))
+        let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
         const dateNow = Date.now()
         
         //First add quest to user
