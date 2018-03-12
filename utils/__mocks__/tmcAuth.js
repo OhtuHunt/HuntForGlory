@@ -82,7 +82,31 @@ const authenticate = async (token) => {
             })
 
         return newUser
+	
+	} else if (token.includes('userWithId')) {
+		const userId = token.substring(11)
+		const user = await AppUser.findById(userId)
 
+		return user
+
+	} else if (token.includes('userIdAndQuestId')) {
+		const userId = token.substring(17, token.indexOf(','))
+		const questId = token.substring(token.indexOf(',') + 1)
+
+		const user = await AppUser.findById(userId)
+		
+		await Quest.findByIdAndUpdate(questId,
+            {   
+                usersStarted: [{
+                    _id: '5a981abbabd1a43cd4055f7c',
+                    user: user._id,
+                    startTime: '2018-03-01T15:22:35.445Z',
+                    finishTime: null
+                }]
+            })
+		const quest = await Quest.findById(questId)
+
+		return user
     } else {
         user = {
             "quests": [],
