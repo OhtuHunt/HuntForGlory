@@ -2,8 +2,6 @@ const Quest = require('../models/quest')
 const mongoose = require('mongoose')
 const config = require('./config')
 
-async = require('async')
-
 const initialQuests = [
 	{
 		name: "Anna artolle femma",
@@ -60,21 +58,37 @@ const initialQuests = [
 
 const questObjects = initialQuests.map(quest => new Quest(quest))
 
-mongoose
-    .connect(config.mongoUrl)
-    .then(
-        Quest
-            .remove({})
-            .then(console.log('quests removed'))
-    )
-    .then(() => {
-        console.log('connected to database', config.mongoUrl)
-        questObjects.map(quest => quest
-            .save()
-            .then(console.log(`${quest.name} saved`))
-        )
-    })
-    .catch(err => {
-        console.log(err)
-    })
+const removeOldAndAddNew = async () => {
+	await Quest.remove({})
+	await Promise.all(questObjects.map(async (quest) => {
+	 	await quest.save()
+		console.log(`${quest.name} saved`)
+	}))
+	mongoose.connection.close()
+}
 
+mongoose.connect(config.mongoUrl)
+removeOldAndAddNew()
+
+/*
+mongoose
+	.connect(config.mongoUrl)
+	.then(
+	Quest
+		.remove({})
+		.then(console.log('quests removed'))
+	)
+	.then(() => {
+		console.log('connected to database', config.mongoUrl)
+		Promise.all(questObjects.map(quest => quest
+			.save()
+			.then(console.log(`${quest.name} saved`))
+		))
+	})
+	.then(() => {
+		console.log(mongoose.connection.close())
+	})
+	.catch(err => {
+		console.log(err)
+	})
+*/
