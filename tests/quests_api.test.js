@@ -709,6 +709,94 @@ describe('API DELETE user from api/user/:id', async () => {
 		})
 
 	})
+
+	describe.only('Regular user editing', async () => {
+
+		let editorUser
+
+		beforeEach(async () => {
+			await User.remove({})
+
+			let userObjects = initialUsers.map(user => new User(user))
+
+			editorUser = new User({
+				"quests": [],
+				"username": "editor",
+				"email": "editor@helsinki.fi",
+				"tmc_id": 25000,
+				"admin": false,
+				"points": 0
+			})
+
+			userObjects.push(editorUser)
+
+			wrongUser = new User({
+				"quests": [],
+				"username": "wrong",
+				"email": "wrong@helsinki.fi",
+				"tmc_id": 99000,
+				"admin": false,
+				"points": 0
+			})
+
+			userObjects.push(wrongUser)
+
+			const promiseArray = userObjects.map(user => user.save())
+			await Promise.all(promiseArray)
+		})
+
+		test('is okey with own account and only correct fields are edited', async () => {
+			const usersBefore = await usersInTestDb()
+
+			editedBody = {
+				"quests": [],
+				"username": "changed",
+				"email": "changed@helsinki.fi",
+				"tmc_id": 99999,
+				"admin": true,
+				"points": 999
+			}
+
+			const response = await api
+				.put(`/api/users/${editorUser._id}`)
+				.send(editedBody)
+				.set('Authorization', `bearer userWithId ${editorUser._id}`)
+				.expect(200)
+
+			expect(response.body.username).toBe('changed')
+			expect(response.body.email).toBe('changed@helsinki.fi')
+			expect(response.body.tmc_id).toBe(25000) // wont change
+			expect(response.body.admin).toBe(false) // wont change
+			expect(response.body.points).toBe(0) // wont change
+
+			const usersAfter = await usersInTestDb()
+			expect(usersBefore.length).toBe(usersAfter.length) // no new user added
+		})
+
+		test('is not okey with other users account', async () => {
+
+			editedBody = {
+				"quests": [],
+				"username": "changed",
+				"email": "changed@helsinki.fi",
+				"tmc_id": 99999,
+				"admin": true,
+				"points": 999
+			}
+
+			const response = await api
+				.put(`/api/users/${editorUser._id}`)
+				.send(editedBody)
+				.set('Authorization', `bearer userWithId ${wrongUser._id}`)
+				.expect(400)
+
+				expect(response.body.error).toBe('You are not authorized to do this')
+				// correct error msg given
+				
+		})
+
+	})
+
 })
 
 afterAll(() => {
