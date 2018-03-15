@@ -14,13 +14,13 @@ require('dotenv').config()
 
 mongoose
   .connect(config.mongoUrl)
-  .then( () => { 
-    console.log('connected to database', config.mongoUrl) 
+  .then(() => {
+    console.log('connected to database', config.mongoUrl)
   })
-  .catch( err => { 
-    console.log(err) 
-  })  
-  
+  .catch(err => {
+    console.log(err)
+  })
+
 mongoose.Promise = global.Promise
 
 const server = http.createServer(app)
@@ -31,13 +31,21 @@ server.listen(config.port, () => {
 
 server.on('close', () => {
   mongoose.connection.close()
-}) 
+})
 
 app.use(cors())
 app.use(sslRedirect())
 app.use(bodyParser.json())
 
-app.use(express.static('build'))
+if (process.env.NODE_ENV === 'development') {
+  if (process.env.REACT_APP_LOCAL === 'true') {
+    app.use(express.static('./builds/buildLocal'))
+  } else {
+    app.use(express.static('./builds/buildDev'))
+  }
+} else {
+  app.use(express.static('./builds/build'))
+}
 
 app.use('/api/quests', questsRouter)
 app.use('/api/users', usersRouter)
