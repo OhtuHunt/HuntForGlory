@@ -1,4 +1,5 @@
 const Quest = require('../models/quest')
+const AppUser = require('../models/app_user')
 const mongoose = require('mongoose')
 const config = require('./config')
 
@@ -58,17 +59,27 @@ const initialQuests = [
 
 const questObjects = initialQuests.map(quest => new Quest(quest))
 
-const removeOldAndAddNew = async () => {
-	await Quest.remove({})
-	await Promise.all(questObjects.map(async (quest) => {
-	 	await quest.save()
-		console.log(`${quest.name} saved`)
-	}))
-	mongoose.connection.close()
+const removeOldQuestsAndAddNew = async () => {
+	try {
+		const users = await AppUser.find({})
+		await Promise.all(users.map(async (user) => {
+			await AppUser.findByIdAndUpdate(user._id, { quests: [], points: 0 }, { new: true })
+			console.log(`Quests deleted from ${user.username}`)
+		}))
+
+		await Quest.remove({})
+		await Promise.all(questObjects.map(async (quest) => {
+			await quest.save()
+			console.log(`${quest.name} saved`)
+		}))
+		mongoose.connection.close()
+	} catch (error) {
+		console.log(error)
+	}
 }
 
 mongoose.connect(config.mongoUrl)
-removeOldAndAddNew()
+removeOldQuestsAndAddNew()
 
 /*
 mongoose
