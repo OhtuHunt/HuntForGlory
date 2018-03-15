@@ -13,20 +13,20 @@ const findQuestAndRemoveUser = async (questId, userToBeRemoved) => {
 }
 
 usersRouter.get('/', async (request, response) => {
-    const users = await AppUser
-        .find({})
-        .populate('quests.quest', { name: 1, type: 1, points: 1 } ) //what do we want here?
-    try {
-        if (await adminCheck.check(request) === true) {
-            return response.status(200).send(users.map(AppUser.format))
-        } else {
-            return response.status(200).send(users.map(AppUser.formatNonAdmin))
-        }
+	const users = await AppUser
+		.find({})
+		.populate('quests.quest', { name: 1, type: 1, points: 1 }) //what do we want here?
+	try {
+		if (await adminCheck.check(request) === true) {
+			return response.status(200).send(users.map(AppUser.format))
+		} else {
+			return response.status(200).send(users.map(AppUser.formatNonAdmin))
+		}
 
-    } catch (error) {
-        console.log(error)
-        response.status(400).end()
-    }
+	} catch (error) {
+		console.log(error)
+		response.status(400).end()
+	}
 })
 
 usersRouter.delete('/:id', async (request, response) => {
@@ -37,28 +37,53 @@ usersRouter.delete('/:id', async (request, response) => {
 		- Promise.all because we want this to be coherent and pass our tests
 		Remove user from database based on id
 	 */
-    try {
+	try {
 		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 
-        if (await adminCheck.check(request) === false && user._id.toString() !== request.params.id.toString()) {
-            return response.status(400).send({ error: 'You are not authorized to do this' })
+		if (await adminCheck.check(request) === false &&  user._id.toString() !== request.params.id.toString()) {
+			return response.status(400).send({ error: 'You are not authorized to do this' })
 		}
-		
+
 		const userToBeDeleted = await AppUser.findById(request.params.id)
-		
+
 		if (!userToBeDeleted) {
-            return response.status(404).send({error: 'user not found'})
-        }
+			return response.status(404).send({ error: 'user not found' })
+		}
 
 		await Promise.all(userToBeDeleted.quests.map(async (questObj) => {
 			await findQuestAndRemoveUser(questObj.quest, userToBeDeleted)
 		}))
 
 		await AppUser.findByIdAndRemove(request.params.id)
-        response.status(200).end()
-    } catch (error) {
-        response.status(400).send({ error: 'malformatted id' })
-    }
+		response.status(200).end()
+	} catch (error) {
+		response.status(400).send({ error: 'malformatted id' })
+	}
+})
+
+usersRouter.put('/:id', async (request, response) => {
+	try {
+		const requestingUser = await tmcAuth.authenticate(tokenParser.parseToken(request))
+		//Check if user himself
+		if (requestingUser._id.toString() !== request.params.id.toString()) {
+			return response.status(400).send({ error: 'You are not authorized to do this' })
+		}
+
+		const body = request.body
+
+		const user = {
+			username: body.username,
+			email: body.email
+		}
+		
+		const updatedUser = await AppUser.findByIdAndUpdate(request.params.id, user, { new: true })
+		
+		response.status(200).send(AppUser.format(updatedUser))
+
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'malformatted id' })
+	}
 })
 
 //   usersRouter.get('/api/users/tmc/:id', (request, response) => {
