@@ -710,7 +710,7 @@ describe('API DELETE user from api/user/:id', async () => {
 
 	})
 
-	describe.only('Regular user editing', async () => {
+	describe('Regular user editing', async () => {
 
 		let editorUser
 
