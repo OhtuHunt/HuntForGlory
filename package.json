@@ -28,8 +28,9 @@
     "build": "react-scripts build",
     "eject": "react-scripts eject",
     "jshint": "node_modules/.bin/jshint src/",
-    "watch": "NODE_ENV=development node_modules/.bin/nodemon src/server/server.js",
-    "test": "NODE_ENV=test jest --verbose"
+    "watch": "NODE_ENV=development REACT_APP_ENV=development node_modules/.bin/nodemon src/server/server.js",
+    "test": "NODE_ENV=test jest --verbose",
+    "localDev": "NODE_ENV=development REACT_APP_ENV=development REACT_APP_LOCAL=true node_modules/.bin/nodemon src/server/server.js"
   },
   "devDependencies": {
     "dotenv": "^4.0.0",
