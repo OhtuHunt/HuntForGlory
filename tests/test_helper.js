@@ -95,6 +95,15 @@ const usersInTestDb = async () => {
     return users
 }
 
+const thisUserIsInTestDb = async (id) => {
+    
+    const user = await AppUser.findById(id)
+    if (user === null || user === undefined) {
+        return false
+    } 
+    return true
+}
+
 module.exports = {
-    initialQuests, questsInTestDb, initialUsers, usersInTestDb
+    initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb
 }

@@ -1,7 +1,7 @@
 const Quest = require('../models/quest')
 const User = require('../models/app_user')
 const supertest = require('supertest')
-const { initialQuests, questsInTestDb, initialUsers, usersInTestDb } = require('./test_helper')
+const { initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb } = require('./test_helper')
 const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
@@ -614,7 +614,7 @@ describe('API DELETE user from api/user/:id', async () => {
 			"quests": [],
 			"username": "toBeDeleted",
 			"email": "deletingUser@helsinki.fi",
-			"tmc_id": 25000,
+			"tmc_id": 99998,
 			"admin": false,
 			"points": 0
 		})
@@ -688,6 +688,8 @@ describe('API DELETE user from api/user/:id', async () => {
 
 		test('own account is deleted', async () => {
 			const usersBefore = await usersInTestDb()
+			expect(await thisUserIsInTestDb(userToBeDeleted._id)).toBe(true)
+
 			const response = await api
 				.delete(`/api/users/${userToBeDeleted._id}`)
 				.set('Authorization', `bearer userWithId ${userToBeDeleted._id}`)
@@ -695,6 +697,8 @@ describe('API DELETE user from api/user/:id', async () => {
 
 			const usersAfter = await usersInTestDb()
 			expect(usersBefore.length).toBe(usersAfter.length + 1)
+			expect(await thisUserIsInTestDb(userToBeDeleted._id)).toBe(false)
+			
 		})
 
 		test('cannot delete another user', async () => {
