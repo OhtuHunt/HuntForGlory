@@ -149,9 +149,9 @@ questsRouter.delete('/:id', async (request, response) => {
             return response.status(404).send({error: 'quest not found'})
         }
 
-		questToBeDeleted.usersStarted.forEach( userObj => {
-			findUserAndRemoveQuest(userObj.user, questToBeDeleted)
-		})
+		await Promise.all(questToBeDeleted.usersStarted.map(async (userObj) => {
+			await findUserAndRemoveQuest(userObj.user, questToBeDeleted)
+		}))
 
         await Quest.findByIdAndRemove(request.params.id)
         response.status(200).end()
