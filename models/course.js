@@ -14,7 +14,7 @@ const courseSchema = new mongoose.Schema({
 })
 
 // no users
-questSchema.statics.format = (course) => {
+courseSchema.statics.format = (course) => {
     return {
         id: course.id,
         name: course.name,
@@ -23,7 +23,7 @@ questSchema.statics.format = (course) => {
     }
 }
 
-questSchema.statics.formatAdmin = (course) => {
+courseSchema.statics.formatAdmin = (course) => {
     return {
         id: course.id,
         name: course.name,

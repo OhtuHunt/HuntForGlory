@@ -803,6 +803,17 @@ describe('API DELETE user from api/user/:id', async () => {
 
 })
 
+describe('api/courses: ', async () => {
+    describe('test POST when user is admin, ', async () => {
+        test('new course is added.', async () => {
+
+            // TODO
+            expect('test').toBe('test')
+        })
+
+    })
+})
+
 afterAll(() => {
 	server.close()
 })
