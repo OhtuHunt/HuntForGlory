@@ -5,6 +5,7 @@ const axios = require('axios')
 const tmcAuth = require('../utils/tmcAuth')
 const adminCheck = require('../utils/adminCheck')
 const tokenParser = require('../utils/tokenParser')
+const geodist = require('geodist')
 
 const findUserAndRemoveQuest = async (userId, questToBeRemoved) => {
 	const user = await AppUser.findById(userId)
@@ -203,7 +204,6 @@ questsRouter.post('/:id/start', async (request, response) => {
 
 
 questsRouter.post('/:id/finish', async (request, response) => {
-    /* TMC authentication should be cleaner (own module) */
     /*finishedQuests = finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
         .map(quest => {
             const newQuest = quest
@@ -216,11 +216,10 @@ questsRouter.post('/:id/finish', async (request, response) => {
     //If quest id is not found, return error status x
     //If user does not have this quest, return error status x
     //If user has this quest already finished, return error status x
-    //MAKE MONGO SAVE ATOMIC?
+    //MAKE MONGO SAVE ATOMIC? Cannot right now
     //Edit finishTime = dateNow user.quests where quest id matches 
     //Also add user's finishTime to quest.usersStarted
     try {
-        // request.body.activationCode
         
         let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
         const dateNow = Date.now()
@@ -234,12 +233,20 @@ questsRouter.post('/:id/finish', async (request, response) => {
         }
 
         const questToCheck = await Quest.findById(finishedQuestItem.quest)
-
         if (questToCheck.deactivated === true) {
             return response.status(400).send({error: 'This quest is deactivated'})
         }
 
-        if (questToCheck.activationCode !== request.body.activationCode) {
+		//Check if quest type is location and check activationCode accordingly
+		if (questToCheck.type === 'location') {
+			const userLocation = request.body.activationCode
+			const correctLocation = questToCheck.activationCode.coords
+			const radius = questToCheck.activationCode.radius
+
+			if (!geodist(userLocation, correctLocation, {limit: radius, unit: 'meters'})) {
+				return response.status(400).send({ error: 'Wrong location' })
+			}
+		} else if (questToCheck.activationCode !== request.body.activationCode) {
             return response.status(400).send({ error: 'Wrong activationcode' })
         }
 
