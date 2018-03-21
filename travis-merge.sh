@@ -21,4 +21,4 @@ git clone "https://github.com/$GITHUB_REPO" "$repo_temp"
 cd "$repo_temp"
 
 git pull "https://$GITHUB_SECRET_TOKEN@github.com/$GITHUB_REPO" "$TRAVIS_BRANCH" >/dev/null 2>&1
-git push -u "https://$GITHUB_SECRET_TOKEN@github.com/$GITHUB_REPO" master >/dev/null 2>&1
+git request-pull master "https://$GITHUB_SECRET_TOKEN@github.com/$GITHUB_REPO" development  >/dev/null 2>&1
