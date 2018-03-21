@@ -173,12 +173,15 @@ describe('POST, adding a new quest to api/quests', async () => {
 })
 
 describe('POST, user starting quest in api/quest/:id/start', async () => {
+	let userStarting
 
 	beforeEach(async () => {
 
 		await Quest.remove({})
 		await User.remove({})
 
+		userStarting = new User(initialUsers[0])
+		await userStarting.save()
 		const questObjects = initialQuests.map(quest => new Quest(quest))
 		const promiseArray = await questObjects.map(quest => quest.save())
 		await Promise.all(promiseArray)
@@ -190,15 +193,16 @@ describe('POST, user starting quest in api/quest/:id/start', async () => {
 		const questToBeStarted = questsBefore[0]
 		expect(questToBeStarted.usersStarted.length).toBe(0)
 
-		const user = await api
+		const questStarted = await api
 			.post(`/api/quests/${questToBeStarted._id}/start`)
-			.set('Authorization', 'bearer testitoken')
+			.set('Authorization', `bearer userWithId ${userStarting._id}`)
 			.expect(200)
 
-		const questsAfter = await questsInTestDb()
-		const questStarted = questsAfter.find(q => q._id.toString() === questToBeStarted._id.toString())
+		const usersAfter = await usersInTestDb()
+		const userStarted = usersAfter.find(u => u._id.toString() === userStarting._id.toString())
 
-		expect(questStarted.usersStarted.map(q => q.user.toString())).toContainEqual(user.body.id.toString())
+		expect(questStarted.body.usersStarted.map(q => q.user.toString())).toContainEqual(userStarting._id.toString())
+		expect(userStarted.quests.map(q => q.quest.toString())).toContainEqual(questStarted.body.id.toString())
 	})
 
 	test('if user has started quest, user cant start it again', async () => {
@@ -333,8 +337,9 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
 
 describe('Quest deactivation', async () => {
 
-	let activeQuest = null
-	let notActiveQuest = null
+	let activeQuest
+	let notActiveQuest
+	let testUser
 
 	beforeEach(async () => {
 		await Quest.remove({})
@@ -360,6 +365,15 @@ describe('Quest deactivation', async () => {
 			started: false,
 			activationCode: "STARTED",
 			deactivated: true
+		})
+
+		testUser = new User({
+			quests: [],
+			username: "hunter",
+			email: "hunter@helsinki.fi",
+			tmc_id: 25000,
+			admin: true,
+			points: 0
 		})
 
 	})
@@ -430,16 +444,18 @@ describe('Quest deactivation', async () => {
 
 	test('POST /api/quest/:id/start starts a quest for user if the quest is active', async () => {
 		const questBefore = await activeQuest.save()
+		await testUser.save()
 
-		const user = await api
+		const questStarted = await api
 			.post(`/api/quests/${questBefore._id}/start`)
-			.set('Authorization', 'bearer testitoken')
+			.set('Authorization', `bearer userWithId ${testUser._id}`)
 			.expect(200)
 
-		const questsAfter = await questsInTestDb()
-		const questStarted = questsAfter.find(q => q._id.toString() === questBefore._id.toString())
+		const usersAfter = await usersInTestDb()
+		const userStarted = usersAfter.find(u => u._id.toString() === testUser._id.toString())
 
-		expect(questStarted.usersStarted.map(q => q.user.toString())).toContainEqual(user.body.id.toString())
+		expect(userStarted.quests.map(q => q.quest.toString())).toContainEqual(questStarted.body.id.toString())
+		expect(questStarted.body.usersStarted.map(q => q.user.toString())).toContainEqual(testUser._id.toString())
 	})
 
 	test('POST /api/quest/:id/start doesnt start a quest for user if the quest is deactived', async () => {

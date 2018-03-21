@@ -194,7 +194,7 @@ questsRouter.post('/:id/start', async (request, response) => {
         await user.save()
         await startedQuest.save()
 
-        response.status(200).send(AppUser.format(user))
+        response.status(200).send(Quest.formatNonAdmin(startedQuest))
 
     } catch (error) {
         console.log(error)
