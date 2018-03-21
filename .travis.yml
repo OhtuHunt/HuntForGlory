@@ -11,10 +11,10 @@ notifications:
   email: false
 
 after_success:
-  - "echo $TRAVIS_PULL_REQUEST"
-  - "curl -o /tmp/travis-automerge https://raw.githubusercontent.com/OhtuHunt/HuntForGlory/master/travis-merge.sh"
-  - "chmod a+x /tmp/travis-automerge"
-  - "BRANCHES_TO_MERGE_REGEX='^devel' BRANCH_TO_MERGE_INTO=master GITHUB_REPO='OhtuHunt/HuntForGlory' /tmp/travis-automerge"
+  # - "echo $TRAVIS_PULL_REQUEST"
+  # - "curl -o /tmp/travis-automerge https://raw.githubusercontent.com/OhtuHunt/HuntForGlory/master/travis-merge.sh"
+  # - "chmod a+x /tmp/travis-automerge"
+  # - "BRANCHES_TO_MERGE_REGEX='^devel' BRANCH_TO_MERGE_INTO=master GITHUB_REPO='OhtuHunt/HuntForGlory' /tmp/travis-automerge"
   - "bash <(curl -s https://codecov.io/bash) -t 5711fafa-d057-496a-b597-299b09b4781d"
 
 
