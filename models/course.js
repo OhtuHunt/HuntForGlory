@@ -6,6 +6,10 @@ const courseSchema = new mongoose.Schema({
     quests: [
         {
             quest: { type: mongoose.Schema.Types.ObjectId, ref: 'quest' },
+        }],
+    users: [
+        {
+            user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' },
         }]
 })
 
@@ -14,7 +18,8 @@ questSchema.statics.format = (course) => {
         id: course.id,
         name: course.name,
         courseCode: course.courseCode,
-        quests: course.quests
+        quests: course.quests,
+        users: course.users
     }
 }
 
