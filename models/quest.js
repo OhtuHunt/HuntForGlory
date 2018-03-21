@@ -7,7 +7,7 @@ const questSchema = new mongoose.Schema({
     type: String,
     done: Boolean,
     started: Boolean,
-    activationCode: String,
+    activationCode: {},
     usersStarted: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' },
