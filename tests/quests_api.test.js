@@ -234,6 +234,17 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
 	})
 
 	test('if user has started quest, user can complete it', async () => {
+		let testUser = new User({
+			quests: [],
+			username: "hunter",
+			email: "hunter@helsinki.fi",
+			tmc_id: 25000,
+			admin: true,
+			points: 0
+		})
+
+		await testUser.save()
+
 		const quest = new Quest({
 			name: "STARTED QUEST",
 			description: "THIS QUEST HAS BEEN STARTED ALREADY",
@@ -244,18 +255,38 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
 			activationCode: "STARTED",
 			usersStarted: [{
 				_id: "5a981abbabd1a43cd4055f7c",
-				user: "5a85756ef41b1a447acce08a",
+				user: testUser._id,
 				startTime: "2018-03-01T15:22:35.445Z",
 				finishTime: null
 			}]
 		})
-		const savedQuest = await quest.save()
+		await quest.save()
 
-		await api
-			.post(`/api/quests/${savedQuest._id}/finish`)
-			.set('Authorization', `bearer hasQuestStarted ${savedQuest._id}`)
+		testUser.quests = [{
+			_id: "5a981abbabd1a43cd4055f7c",
+			quest: quest._id,
+			startTime: "2018-03-01T15:22:35.445Z",
+			finishTime: null
+		}]
+
+		await testUser.save()
+
+		const finishedQuest = await api
+			.post(`/api/quests/${quest._id}/finish`)
+			.set('Authorization', `bearer userWithId ${testUser._id}`)
 			.send({ activationCode: "STARTED" })
 			.expect(200)
+		
+		expect(finishedQuest.body.name).toEqual("STARTED QUEST")
+
+		finQuestFromDB = await Quest.findById(finishedQuest.body.id)
+		testUser = await User.findById(testUser._id)
+		
+		const finishTimeOfUser = testUser.quests.find(q => q.quest.toString() === finishedQuest.body.id.toString()).finishTime
+		expect(finishTimeOfUser).not.toBeNull
+
+		const finishTimeOfQuest = finQuestFromDB.usersStarted.find(u => u.user.toString() === testUser._id.toString()).finishTime
+		expect(finishTimeOfQuest).toEqual(finishTimeOfUser)
 	})
 
 	test('if user has completed a quest, he cannot complete it again', async () => {
@@ -470,6 +501,7 @@ describe('Quest deactivation', async () => {
 
 
 	test('POST /api/quest/:id/finish marks the active quest as finished if user gives the correct activation code and has started the quest', async () => {
+
 		const quest = new Quest({
 			name: "STARTED QUEST",
 			description: "THIS QUEST HAS BEEN STARTED ALREADY",
@@ -714,7 +746,7 @@ describe('API DELETE user from api/user/:id', async () => {
 			const usersAfter = await usersInTestDb()
 			expect(usersBefore.length).toBe(usersAfter.length + 1)
 			expect(await thisUserIsInTestDb(userToBeDeleted._id)).toBe(false)
-			
+
 		})
 
 		test('cannot delete another user', async () => {
@@ -810,9 +842,9 @@ describe('API DELETE user from api/user/:id', async () => {
 				.set('Authorization', `bearer userWithId ${wrongUser._id}`)
 				.expect(400)
 
-				expect(response.body.error).toBe('You are not authorized to do this')
-				// correct error msg given
-				
+			expect(response.body.error).toBe('You are not authorized to do this')
+			// correct error msg given
+
 		})
 
 	})
@@ -820,14 +852,14 @@ describe('API DELETE user from api/user/:id', async () => {
 })
 
 describe('api/courses: ', async () => {
-    describe('test POST when user is admin, ', async () => {
-        test('new course is added.', async () => {
+	describe('test POST when user is admin, ', async () => {
+		test('new course is added.', async () => {
 
-            // TODO
-            expect('test').toBe('test')
-        })
+			// TODO
+			expect('test').toBe('test')
+		})
 
-    })
+	})
 })
 
 afterAll(() => {

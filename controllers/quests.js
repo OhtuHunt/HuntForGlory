@@ -277,7 +277,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
         await user.save()
         await finishedQuest.save()
 
-        response.status(200).send(AppUser.format(user))
+        response.status(200).send(Quest.formatNonAdmin(finishedQuest))
     } catch (error) {
         console.log(error)
         response.status(400).send({ error: 'Oooooops... something went wrong. :(' })
