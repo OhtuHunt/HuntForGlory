@@ -4,6 +4,7 @@ const config = require('../../utils/config')
 const questsRouter = require('../../controllers/quests')
 const usersRouter = require('../../controllers/app_users')
 const loginRouter = require('../../controllers/login')
+const coursesRouter = require('../../controllers/courses')
 const sslRedirect = require('heroku-ssl-redirect')
 const express = require('express')
 const app = express()
@@ -50,6 +51,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api/quests', questsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
+app.use('/api/courses', coursesRouter)
 
 const error = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
