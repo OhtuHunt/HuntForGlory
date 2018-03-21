@@ -5,11 +5,11 @@ const courseSchema = new mongoose.Schema({
     courseCode: String,
     quests: [
         {
-            quest: { type: mongoose.Schema.Types.ObjectId, ref: 'quest' },
+            quest: { type: mongoose.Schema.Types.ObjectId, ref: 'quest' }
         }],
     users: [
         {
-            user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' },
+            user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' }
         }]
 })
 
