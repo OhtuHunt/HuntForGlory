@@ -9,6 +9,22 @@ const adminCheck = require('../utils/adminCheck')
    BASEURL FOR THIS ROUTER IS /api/courses
 */
 
+coursesRouter.get('/', async (request, response) => {
+    // TODO refactor to populate when joined
+    try {
+        const courses = await Course.find({})
+        if (await adminCheck.check(request) === true) {
+            return response.status(200).send(courses.map(Course.formatAdmin))
+        } else {
+            return response.status(200).send(courses.map(Course.format))
+        }      
+
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({ error: 'something went wrong...' })
+    }
+})
+
 coursesRouter.post('/', async (request, response) => {
     try {
         /*

@@ -1,7 +1,8 @@
 const Quest = require('../models/quest')
 const User = require('../models/app_user')
+const Course = require('../models/course')
 const supertest = require('supertest')
-const { initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb } = require('./test_helper')
+const { initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb, coursesInTestDb } = require('./test_helper')
 const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
@@ -276,12 +277,12 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
 			.set('Authorization', `bearer userWithId ${testUser._id}`)
 			.send({ activationCode: "STARTED" })
 			.expect(200)
-		
+
 		expect(finishedQuest.body.name).toEqual("STARTED QUEST")
 
 		finQuestFromDB = await Quest.findById(finishedQuest.body.id)
 		testUser = await User.findById(testUser._id)
-		
+
 		const finishTimeOfUser = testUser.quests.find(q => q.quest.toString() === finishedQuest.body.id.toString()).finishTime
 		expect(finishTimeOfUser).not.toBeNull
 
@@ -844,21 +845,39 @@ describe('API DELETE user from api/user/:id', async () => {
 
 			expect(response.body.error).toBe('You are not authorized to do this')
 			// correct error msg given
-
 		})
-
 	})
-
 })
 
 describe('api/courses: ', async () => {
 	describe('test POST when user is admin, ', async () => {
-		test('new course is added.', async () => {
-
-			// TODO
-			expect('test').toBe('test')
+		beforeAll(async () => {
+			await Course.remove({})
 		})
 
+		test('new course is added when user is admin.', async () => {
+
+			const coursesInDb = await coursesInTestDb()
+
+			const newCourse = {
+				name: 'testCourse',
+				courseCode: 'TKT007'
+			}
+
+			await api
+				.post('/api/courses')
+				.set('Authorization', `bearer admin`)
+				.send(newCourse)
+				.expect(200)
+				.expect('Content-Type', /application\/json/)
+
+			const response = await api
+				.get('/api/courses')
+
+			const courseNames = response.body.map(r => r.name)
+			expect(courseNames).toContain('testCourse')
+			expect(response.body.length).toBe(coursesInDb.length + 1)
+		})
 	})
 })
 
