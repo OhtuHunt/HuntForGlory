@@ -105,6 +105,19 @@ describe('API GET single quest from api/quests/:id', async () => {
 })
 
 describe('POST, adding a new quest to api/quests', async () => {
+	let course
+
+	beforeAll(async () => {
+		const testCourse =
+			{
+				name: "Testikurssi",
+				courseCode: "TKT007",
+				quests: [],
+				users: []
+			}
+		course = new Course(testCourse)
+		await course.save()
+	})
 
 	describe('if user is admin', async () => {
 
@@ -117,12 +130,11 @@ describe('POST, adding a new quest to api/quests', async () => {
 				description: "Testing POST",
 				points: 150,
 				type: "Solo-quest",
-				done: true,
-				started: true,
-				activationCode: "post"
+				activationCode: "post",
+				course: course._id
 			}
 
-			await api
+			const createdQuest = await api
 				.post('/api/quests')
 				.set('Authorization', `bearer admin`)
 				.send(newQuest)
@@ -136,6 +148,9 @@ describe('POST, adding a new quest to api/quests', async () => {
 			expect(questNames).toContain('a new quest')
 
 			expect(response.body.length).toBe(questsInDb.length + 1)
+
+			course = await Course.findById(course._id)
+			expect(course.quests).toContain(createdQuest.body.id)
 		})
 	})
 

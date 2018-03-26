@@ -9,6 +9,10 @@ const adminCheck = require('../utils/adminCheck')
    BASEURL FOR THIS ROUTER IS /api/courses
 */
 
+const findQuestAndEdit = async (questId, courseToBeDeleted) => {
+	const quest = await Quest.findByIdAndUpdate(userId, {quest: courseToBeDeleted.name}, {deactivated: true})
+}
+
 coursesRouter.get('/', async (request, response) => {
     // TODO refactor to populate when joined
     try {
@@ -54,6 +58,34 @@ coursesRouter.post('/', async (request, response) => {
     } catch (error) {
         console.log(error)
         response.status(400).send({ error: 'something went wrong...' })
+    }
+})
+
+coursesRouter.delete('/:id', async (request, response) => {
+	//This does not reduce points from users
+    try {
+		//Check admin
+        if (await adminCheck.check(request) === false) {
+            return response.status(400).send({ error: 'Admin priviledges needed' })
+        }
+        const courseToBeDeleted = await Course.findById(request.params.id)
+		//Check that the course is found
+        if (!courseToBeDeleted) {
+            return response.status(404).send({error: 'course not found'})
+        }
+		//Deactivate all quests related to course and change their course to be the course name as a reference
+		await Promise.all(courseToBeDeleted.quests.map(async quest => {
+			await Quest.findByIdAndUpdate(quest, {deactivated: true})
+			//await findQuestAndEdit(quest, courseToBeDeleted)
+		}))
+
+		//Remove course from db
+		await Course.findByIdAndRemove(request.params.id)
+		
+        response.status(200).end()
+    } catch (error) {
+        console.log(error)
+        response.status(400).send({ error: 'malformatted id' })
     }
 })
 

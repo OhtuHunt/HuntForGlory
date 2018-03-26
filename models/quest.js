@@ -13,7 +13,7 @@ const questSchema = new mongoose.Schema({
             finishTime: Date
         }],
     deactivated: Boolean,
-    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }
+	course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }
 })
 
 questSchema.statics.format = (quest) => {
@@ -27,7 +27,7 @@ questSchema.statics.format = (quest) => {
         usersStarted: quest.usersStarted,
         deactivated: quest.deactivated,
         course: quest.course
-    }
+	}
 }
 
 questSchema.statics.formatNonAdmin = (quest) => {

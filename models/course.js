@@ -3,10 +3,7 @@ const mongoose = require('mongoose')
 const courseSchema = new mongoose.Schema({
     name: String,
     courseCode: String,
-    quests: [
-        {
-            quest: { type: mongoose.Schema.Types.ObjectId, ref: 'quest' }
-        }],
+    quests: [],
     users: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' }
