@@ -14,7 +14,7 @@ describe('api/courses: ', async () => {
 			await Course.remove({})
 		})
 
-        // TODO Add test: fails with nonAdmin user
+		// TODO Add test: fails with nonAdmin user
 		test('new course is added when user is admin.', async () => {
 
 			const coursesInDb = await coursesInTestDb()
@@ -37,6 +37,27 @@ describe('api/courses: ', async () => {
 			const courseNames = response.body.map(r => r.name)
 			expect(courseNames).toContain('testCourse')
 			expect(response.body.length).toBe(coursesInDb.length + 1)
+		})
+
+		test('NonAdmin cant create a new course', async () => {
+
+			const coursesBefore = await coursesInTestDb()
+
+			const newCourse = {
+				name: 'testCourse',
+				courseCode: 'TKT007'
+			}
+
+			const response = await api
+				.post('/api/courses')
+				.set('Authorization', `bearer eiadmin`)
+				.send(newCourse)
+				.expect(400)
+
+			expect(response.body.error).toBe('Admin priviledges needed')
+
+			const coursesAfter = await coursesInTestDb()
+			expect(coursesBefore.length).toBe(coursesAfter.length)
 		})
 	})
 })
