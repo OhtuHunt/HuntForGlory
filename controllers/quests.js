@@ -74,9 +74,10 @@ questsRouter.post('/', async (request, response) => {
 			course: body.course
         })
 
-		const savedQuest = await quest.save()
-		
 		let questCourse = await Course.findById(body.course)
+		
+		const savedQuest = await quest.save()
+
 		questCourse.quests = questCourse.quests.concat(savedQuest._id)
 		await questCourse.save()
 

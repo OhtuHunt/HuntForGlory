@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
             quest: { type: mongoose.Schema.Types.ObjectId, ref: 'Quest' },
             startTime: Date,
             finishTime: Date
-        }]
+		}],
+	courses: [{course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }}]
 })
 
 userSchema.statics.format = (user) => {
@@ -22,7 +23,8 @@ userSchema.statics.format = (user) => {
         points: user.points,
         email: user.email,
         admin: user.admin,
-        quests: user.quests
+		quests: user.quests,
+		courses: user.courses
     }
 }
 
@@ -32,7 +34,8 @@ userSchema.statics.formatNonAdmin = (user) => {
         username: user.username,
         points: user.points,
         admin: user.admin,
-        quests: user.quests
+		quests: user.quests,
+		courses: user.courses
     }
 }
 
