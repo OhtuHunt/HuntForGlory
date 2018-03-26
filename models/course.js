@@ -16,17 +16,8 @@ courseSchema.statics.format = (course) => {
         id: course.id,
         name: course.name,
         courseCode: course.courseCode,
-        quests: course.quests
-    }
-}
-
-courseSchema.statics.formatAdmin = (course) => {
-    return {
-        id: course.id,
-        name: course.name,
-        courseCode: course.courseCode,
-        quests: course.quests,
-        users: course.users
+		quests: course.quests,
+		users: course.users
     }
 }
 
