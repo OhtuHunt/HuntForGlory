@@ -63,7 +63,7 @@ coursesRouter.post('/:id/join', async (request, response) => {
 	try {
 		//Check user token tmcAuth
 		let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
-
+		
 		//Check that course is in db
 		let joinedCourse = await Course.findById(request.params.id)
 

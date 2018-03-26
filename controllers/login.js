@@ -35,7 +35,8 @@ loginRouter.post('/', async (request, response) => {
                 email: user.data.email,
                 tmc_id: user.data.id,
                 admin: user.data.administrator,
-                points: 0
+				points: 0,
+				courses: []
             })
 
             const userToSave = await appUser.save()

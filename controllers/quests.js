@@ -36,7 +36,7 @@ questsRouter.get('/', async (request, response) => {
 questsRouter.get('/:id', async (request, response) => {
     //Does not require logged in user
     try {
-        const quest = await Quest.findById(request.params.id)
+        const quest = await Quest.findById(request.params.id).populate('usersStarted', { username: 1 }).populate('course', { name: 1 })
 
         if (await adminCheck.check(request) === true) {
             return response.status(200).send(Quest.format(quest))
