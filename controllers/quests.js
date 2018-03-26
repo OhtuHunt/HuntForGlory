@@ -1,6 +1,7 @@
 const questsRouter = require('express').Router()
 const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
+const Course = require('../models/course')
 const axios = require('axios')
 const tmcAuth = require('../utils/tmcAuth')
 const adminCheck = require('../utils/adminCheck')
@@ -15,9 +16,10 @@ const findUserAndRemoveQuest = async (userId, questToBeRemoved) => {
 }
 
 questsRouter.get('/', async (request, response) => {
-    //Does not require logged in user
+	//Does not require logged in user
+	//But we need to filter quests from courses where user attends
     try {
-        const quests = await Quest.find({}).populate('usersStarted', { username: 1 })
+        const quests = await Quest.find({}).populate('usersStarted', { username: 1 }).populate('course', { name: 1 })
         
         if (await adminCheck.check(request) === true) {
             return response.status(200).send(quests.map(Quest.format))
@@ -67,13 +69,18 @@ questsRouter.post('/', async (request, response) => {
             description: body.description,
             points: body.points,
             type: body.type,
-            done: body.done,
-            started: body.started,
             activationCode: body.activationCode,
-            deactivated: false
+			deactivated: false,
+			course: body.course
         })
 
-        const savedQuest = await quest.save()
+		let questCourse = await Course.findById(body.course)
+		
+		const savedQuest = await quest.save()
+
+		questCourse.quests = questCourse.quests.concat(savedQuest._id)
+		await questCourse.save()
+
         response.status(200).send(Quest.format(savedQuest))
 
     } catch (error) {
@@ -95,10 +102,9 @@ questsRouter.put('/:id', async (request, response) => {
             description: body.description,
             points: body.points,
             type: body.type,
-            done: body.done,
-            started: body.started,
             activationCode: body.activationCode,
-            deactivated: body.deactivated
+			deactivated: body.deactivated,
+			course: body.course
         }
 
         const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
@@ -111,12 +117,14 @@ questsRouter.put('/:id', async (request, response) => {
 })
 
 questsRouter.post('/:id/deactivated', async (request, response) => {
+	// changes quest's deactivated boolean based on the previous value. If course is deactivated then this post changes it to activated
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({error: 'Admin priviledges needed'})
         }
 
         const oldQuest = await Quest.findById(request.params.id)
+		const deactivatedNew = oldQuest.deactivated === true ? false : true
 
         const quest = {
             name: oldQuest.name,
@@ -126,10 +134,12 @@ questsRouter.post('/:id/deactivated', async (request, response) => {
             done: oldQuest.done,
             started: oldQuest.started,
             activationCode: oldQuest.activationCode,
-            deactivated: true
+			deactivated: deactivatedNew,
+			course: oldQuest.course
         }
 
-        const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, {new: true})
+		const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, {new: true})
+
         response.status(200).send(Quest.format(updatedQuest))
 
     } catch (error) {
@@ -154,7 +164,12 @@ questsRouter.delete('/:id', async (request, response) => {
 			await findUserAndRemoveQuest(userObj.user, questToBeDeleted)
 		}))
 
-        await Quest.findByIdAndRemove(request.params.id)
+		await Quest.findByIdAndRemove(request.params.id)
+		
+		let questCourse = await Course.findById(questToBeDeleted.course)
+		questCourse.quests = questCourse.quests.filter(q => q.toString() !== questToBeDeleted._id.toString())
+		await questCourse.save()
+
         response.status(200).end()
     } catch (error) {
         console.log(error)
@@ -194,7 +209,7 @@ questsRouter.post('/:id/start', async (request, response) => {
         await user.save()
         await startedQuest.save()
 
-        response.status(200).send(AppUser.format(user))
+        response.status(200).send(Quest.formatNonAdmin(startedQuest))
 
     } catch (error) {
         console.log(error)
@@ -277,7 +292,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
         await user.save()
         await finishedQuest.save()
 
-        response.status(200).send(AppUser.format(user))
+        response.status(200).send(Quest.formatNonAdmin(finishedQuest))
     } catch (error) {
         console.log(error)
         response.status(400).send({ error: 'Oooooops... something went wrong. :(' })

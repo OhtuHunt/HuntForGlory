@@ -5,8 +5,6 @@ const questSchema = new mongoose.Schema({
     description: String,
     points: Number,
     type: String,
-    done: Boolean,
-    started: Boolean,
     activationCode: {},
     usersStarted: [
         {
@@ -14,7 +12,8 @@ const questSchema = new mongoose.Schema({
             startTime: Date,
             finishTime: Date
         }],
-    deactivated: Boolean
+    deactivated: Boolean,
+	course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }
 })
 
 questSchema.statics.format = (quest) => {
@@ -24,12 +23,11 @@ questSchema.statics.format = (quest) => {
         description: quest.description,
         points: quest.points,
         type: quest.type,
-        done: quest.done,
-        started: quest.started,
         activationCode: quest.activationCode,
         usersStarted: quest.usersStarted,
-        deactivated: quest.deactivated
-    }
+        deactivated: quest.deactivated,
+        course: quest.course
+	}
 }
 
 questSchema.statics.formatNonAdmin = (quest) => {
@@ -39,10 +37,9 @@ questSchema.statics.formatNonAdmin = (quest) => {
         description: quest.description,
         points: quest.points,
         type: quest.type,
-        done: quest.done,
-        started: quest.started,
         usersStarted: quest.usersStarted,
-        deactivated: quest.deactivated
+        deactivated: quest.deactivated,
+        course: quest.course
     }
 }
 

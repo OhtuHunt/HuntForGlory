@@ -3,23 +3,21 @@ const mongoose = require('mongoose')
 const courseSchema = new mongoose.Schema({
     name: String,
     courseCode: String,
-    quests: [
-        {
-            quest: { type: mongoose.Schema.Types.ObjectId, ref: 'quest' }
-        }],
+    quests: [],
     users: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' }
         }]
 })
 
-questSchema.statics.format = (course) => {
+// no users
+courseSchema.statics.format = (course) => {
     return {
         id: course.id,
         name: course.name,
         courseCode: course.courseCode,
-        quests: course.quests,
-        users: course.users
+		quests: course.quests,
+		users: course.users
     }
 }
 
