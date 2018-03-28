@@ -20,11 +20,12 @@ questsRouter.get('/', async (request, response) => {
 	//But we need to filter quests from courses where user attends
     try {
 		//const quests = await Quest.find({})
-        if (await adminCheck.check(request) === true) {
+		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+			
+        if (user.admin === true) {
 			let quests = await Quest.find({})
 			return response.status(200).send(quests.map(Quest.format))
 		} else {
-			const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 			let courses = user.courses.map(c => c.course.toString())
 			let quests = []
 			

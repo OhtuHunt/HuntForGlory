@@ -81,8 +81,8 @@ coursesRouter.post('/:id/join', async (request, response) => {
 		//Add course to user
 		user.courses = user.courses.concat([{ course: joinedCourse._id }])
 
-		joinedCourse.save()
-		user.save()
+		await joinedCourse.save()
+		await user.save()
 
 		response.status(200).send(Course.format(joinedCourse))
 
