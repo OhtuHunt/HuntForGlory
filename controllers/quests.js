@@ -265,7 +265,10 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		//Check if quest type is location and check activationCode accordingly
 		if (questToCheck.type === 'location') {
 			const userLocation = request.body.activationCode
-			const correctLocation = questToCheck.activationCode.coords
+			const correctLocation = { 
+				lat: questToCheck.activationCode.lat, 
+				lng: questToCheck.activationCode.lng
+			}
 			const radius = questToCheck.activationCode.radius
 
 			if (!geodist(userLocation, correctLocation, {limit: radius, unit: 'meters'})) {
