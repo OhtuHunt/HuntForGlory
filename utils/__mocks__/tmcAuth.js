@@ -2,7 +2,7 @@ const AppUser = require('../../models/app_user')
 const Quest = require('../../models/quest')
 
 const authenticate = async (token) => {
-    let user
+	let user
     if (token === 'admin') {
         user = {
             "quests": [],

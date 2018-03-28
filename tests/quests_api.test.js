@@ -29,6 +29,27 @@ describe('API GET all from api/quests', async () => {
 
 			expect(questActivationCodes).not.toContain(undefined)
 		})
+
+		test('all quests are returned', async () => {
+			const questsInDb = await questsInTestDb()
+	
+			const response = await api
+				.get('/api/quests')
+				.set('Authorization', `bearer admin`)
+				.expect(200)
+				.expect('Content-Type', /application\/json/)
+			
+			expect(response.body.length).toBe(questsInDb.length)
+		})
+	
+		test('a specific quest is within the returned quests', async () => {
+			const response = await api
+				.get('/api/quests')
+				.set('Authorization', `bearer admin`)
+			const questNames = response.body.map(r => r.name)
+	
+			expect(questNames).toContain('Fun with Done')
+		})
 	})
 
 	describe('when user is not admin', async () => {
@@ -52,24 +73,7 @@ describe('API GET all from api/quests', async () => {
 			.expect('Content-Type', /application\/json/)
 	})
 
-	test('all quests are returned', async () => {
-		const questsInDb = await questsInTestDb()
 
-		const response = await api
-			.get('/api/quests')
-			.expect(200)
-			.expect('Content-Type', /application\/json/)
-
-		expect(response.body.length).toBe(questsInDb.length)
-	})
-
-	test('a specific quest is within the returned quests', async () => {
-		const response = await api
-			.get('/api/quests')
-		const questNames = response.body.map(r => r.name)
-
-		expect(questNames).toContain('Fun with Done')
-	})
 })
 
 describe('API GET single quest from api/quests/:id', async () => {
@@ -141,13 +145,12 @@ describe('POST, adding a new quest to api/quests', async () => {
 				.expect(200)
 				.expect('Content-Type', /application\/json/)
 
-			const response = await api
-				.get('/api/quests')
+			const questsAfter = await questsInTestDb()
 
-			const questNames = response.body.map(r => r.name)
+			const questNames = questsAfter.map(r => r.name)
 			expect(questNames).toContain('a new quest')
 
-			expect(response.body.length).toBe(questsInDb.length + 1)
+			expect(questsAfter.length).toBe(questsInDb.length + 1)
 
 			course = await Course.findById(course._id)
 			expect(course.quests).toContain(createdQuest.body.id)

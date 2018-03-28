@@ -16,14 +16,24 @@ const findUserAndRemoveQuest = async (userId, questToBeRemoved) => {
 }
 
 questsRouter.get('/', async (request, response) => {
-	//Does not require logged in user
+	//Does require logged in user
 	//But we need to filter quests from courses where user attends
     try {
-        const quests = await Quest.find({}).populate('usersStarted', { username: 1 }).populate('course', { name: 1 })
-        
+		//const quests = await Quest.find({})
         if (await adminCheck.check(request) === true) {
-            return response.status(200).send(quests.map(Quest.format))
-        } else {
+			let quests = await Quest.find({})
+			return response.status(200).send(quests.map(Quest.format))
+		} else {
+			const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+			let courses = user.courses.map(c => c.course.toString())
+			let quests = []
+			
+			await Promise.all(courses.map( async course => {
+				let questHelp = await Quest.find({course: course})
+						   .populate('usersStarted', { username: 1 })
+						   .populate('course', { name: 1 })
+				quests = quests.concat(questHelp)
+			}))
             return response.status(200).send(quests.map(Quest.formatNonAdmin).filter(q => q.deactivated === false))
         }
 
