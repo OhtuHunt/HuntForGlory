@@ -11,6 +11,8 @@ const tmcClient = new tmc(process.env.CLIENT_ID, process.env.CLIENT_SECRET)
 const axios = require('axios')
 
 loginRouter.post('/', async (request, response) => {
+    let isNewUser = false
+
     const body = request.body
     const param = {
         username: body.username,
@@ -30,6 +32,8 @@ loginRouter.post('/', async (request, response) => {
 
         if (userById === null) {
             
+            isNewUser = true
+
             const appUser = new AppUser({
                 username: user.data.username,
                 email: user.data.email,
@@ -43,7 +47,7 @@ loginRouter.post('/', async (request, response) => {
             userById = await AppUser.findOne({ "tmc_id": userToSave.tmc_id })
         } 
 
-        response.status(200).send({user: AppUser.format(userById), token: res.accessToken})
+        response.status(200).send({user: AppUser.format(userById), token: res.accessToken, isNewUser})
 
     } catch (e) {
         console.error(e);

@@ -60,6 +60,42 @@ describe('api/courses: ', async () => {
 			expect(coursesBefore.length).toBe(coursesAfter.length)
 		})
 	})
+	describe('POST :id/join', async () => {
+
+		let testCourse
+		let testUser
+
+		beforeAll(async () => {
+			await Course.remove({})
+			await User.remove({})
+			const newCourse = new Course({
+				name: 'testCourse',
+				courseCode: 'TKT007'
+			})
+			testCourse = await newCourse.save()
+			
+			const newUser = new User({
+				quests: [],
+				username: "hunter",
+				email: "hunter@helsinki.fi",
+				tmc_id: 25000,
+				admin: true,
+				points: 0
+			})
+			testUser = await newUser.save()
+		})
+
+		test('user that hasnt already joined course, joins course', async () => {
+			const response = await api
+				.post(`/api/courses/${testCourse._id}/join`)
+				.set('Authorization', `bearer userWithId ${testUser._id}`)
+				.expect(200)
+
+			const course = await Course.findById(testCourse._id)
+			const courseUserIds = course.users.map(u => u.user.toString())
+			expect(courseUserIds).toContainEqual(testUser._id.toString())
+		})
+	})
 })
 
 afterAll(() => {
