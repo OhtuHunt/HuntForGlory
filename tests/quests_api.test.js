@@ -32,22 +32,22 @@ describe('API GET all from api/quests', async () => {
 
 		test('all quests are returned', async () => {
 			const questsInDb = await questsInTestDb()
-	
+
 			const response = await api
 				.get('/api/quests')
 				.set('Authorization', `bearer admin`)
 				.expect(200)
 				.expect('Content-Type', /application\/json/)
-			
+
 			expect(response.body.length).toBe(questsInDb.length)
 		})
-	
+
 		test('a specific quest is within the returned quests', async () => {
 			const response = await api
 				.get('/api/quests')
 				.set('Authorization', `bearer admin`)
 			const questNames = response.body.map(r => r.name)
-	
+
 			expect(questNames).toContain('Fun with Done')
 		})
 	})
@@ -73,6 +73,38 @@ describe('API GET all from api/quests', async () => {
 			.expect('Content-Type', /application\/json/)
 	})
 
+	test('quest returns its courses name', async () => {
+
+		const course = new Course({
+			name: "testCourse",
+			courseCode: "1123",
+			quests: [],
+			users: []
+		})
+
+		const quest = new Quest({
+			name: "Käy jossain",
+			description: "Käy jossakin OHPE:n pajoista ja tee siellä tehtävä.",
+			points: 5,
+			type: "Solo-location-quest",
+			done: false,
+			started: false,
+			activationCode: "pajahdus",
+			usersStarted: [],
+			usersFinished: [],
+			deactivated: false
+		})
+
+		quest.course = course
+		course.quests.concat(quest)
+		await course.save()
+		await quest.save()
+
+		const retQuest = await api
+					.get(`/api/quests/${quest._id}`)
+
+		expect(retQuest.body.course.name).toEqual(course.name)
+	})
 
 })
 
