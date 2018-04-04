@@ -73,7 +73,7 @@ describe('api/courses: ', async () => {
 				courseCode: 'TKT007'
 			})
 			testCourse = await newCourse.save()
-			
+
 			const newUser = new User({
 				quests: [],
 				username: "hunter",
@@ -94,6 +94,15 @@ describe('api/courses: ', async () => {
 			const course = await Course.findById(testCourse._id)
 			const courseUserIds = course.users.map(u => u.user.toString())
 			expect(courseUserIds).toContainEqual(testUser._id.toString())
+		})
+
+		test('user that has already joined course, cant join again', async () => {
+			const response = await api
+				.post(`/api/courses/${testCourse._id}/join`)
+				.set('Authorization', `bearer hasJoinedCourse ${testCourse._id}`)
+				.expect(400)
+			expect(response.body.error).toEqual('Course already joined')
+
 		})
 	})
 })
