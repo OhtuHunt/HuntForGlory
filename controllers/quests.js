@@ -1,6 +1,7 @@
 const questsRouter = require('express').Router()
 const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
+const Course = require('../models/course')
 const axios = require('axios')
 const tmcAuth = require('../utils/tmcAuth')
 const adminCheck = require('../utils/adminCheck')
@@ -15,191 +16,218 @@ const findUserAndRemoveQuest = async (userId, questToBeRemoved) => {
 }
 
 questsRouter.get('/', async (request, response) => {
-    //Does not require logged in user
-    try {
-        const quests = await Quest.find({}).populate('usersStarted', { username: 1 })
-        
-        if (await adminCheck.check(request) === true) {
-            return response.status(200).send(quests.map(Quest.format))
-        } else {
-            return response.status(200).send(quests.map(Quest.formatNonAdmin).filter(q => q.deactivated === false))
-        }
+	//Does require logged in user
+	//But we need to filter quests from courses where user attends
+	try {
+		//const quests = await Quest.find({})
+		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 
-    } catch (error) {
-        console.log(error)
-        response.status(500).send({ error: 'something went wrong' })
-    }
+		if (user.admin === true) {
+			let quests = await Quest.find({})
+				.populate('usersStarted', { username: 1 })
+				.populate('course', { name: 1 })
+			return response.status(200).send(quests.map(Quest.format))
+		} else {
+			let courses = user.courses.map(c => c.course.toString())
+			let quests = []
+
+			await Promise.all(courses.map(async course => {
+				let questHelp = await Quest.find({ course: course })
+					.populate('usersStarted', { username: 1 })
+					.populate('course', { name: 1 })
+				quests = quests.concat(questHelp)
+			}))
+			return response.status(200).send(quests.map(Quest.formatNonAdmin).filter(q => q.deactivated === false))
+		}
+
+	} catch (error) {
+		console.log(error)
+		response.status(500).send({ error: 'something went wrong' })
+	}
 })
 
 questsRouter.get('/:id', async (request, response) => {
-    //Does not require logged in user
-    try {
-        const quest = await Quest.findById(request.params.id)
+	//Does not require logged in user
+	try {
+		const quest = await Quest.findById(request.params.id).populate('usersStarted', { username: 1 }).populate('course', { name: 1 })
 
-        if (await adminCheck.check(request) === true) {
-            return response.status(200).send(Quest.format(quest))
-        } else {
-            return response.status(200).send(Quest.formatNonAdmin(quest))
-        }
-        
-        
-    } catch (error) {
-        console.log(error)
-        response.status(400).send({ error: 'malformatted id' })
-    }
+		if (await adminCheck.check(request) === true) {
+			return response.status(200).send(Quest.format(quest))
+		} else {
+			return response.status(200).send(Quest.formatNonAdmin(quest))
+		}
+
+
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'malformatted id' })
+	}
 })
 
 
 questsRouter.post('/', async (request, response) => {
-    try {
-        //let token = parseToken(request)
-        //let user = await tmcAuth.authenticate(token)
-        if (await adminCheck.check(request) === false) {
-            return response.status(400).send({ error: 'Admin priviledges needed' })
-        }
+	try {
+		//let token = parseToken(request)
+		//let user = await tmcAuth.authenticate(token)
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'Admin priviledges needed' })
+		}
 
-        const body = request.body
-        if (body === undefined) {
-            return response.status(400).json({ error: 'content missing' })
-        }
-        const quest = new Quest({
-            name: body.name,
-            description: body.description,
-            points: body.points,
-            type: body.type,
-            done: body.done,
-            started: body.started,
-            activationCode: body.activationCode,
-            deactivated: false
-        })
+		const body = request.body
+		if (body === undefined) {
+			return response.status(400).json({ error: 'content missing' })
+		}
+		const quest = new Quest({
+			name: body.name,
+			description: body.description,
+			points: body.points,
+			type: body.type,
+			activationCode: body.activationCode,
+			deactivated: false,
+			course: body.course
+		})
 
-        const savedQuest = await quest.save()
-        response.status(200).send(Quest.format(savedQuest))
+		let questCourse = await Course.findById(body.course)
 
-    } catch (error) {
-        console.log(error)
-        response.status(400).send({ error: 'something went wrong...' })
-    }
+		const savedQuest = await quest.save()
+
+		questCourse.quests = questCourse.quests.concat(savedQuest._id)
+		await questCourse.save()
+
+		response.status(200).send(Quest.format(savedQuest))
+
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'something went wrong...' })
+	}
 })
 
 questsRouter.put('/:id', async (request, response) => {
-    try {
+	try {
 
-        if (await adminCheck.check(request) === false) {
-            return response.status(400).send({ error: 'Admin priviledges needed' })
-        }
-        const body = request.body
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'Admin priviledges needed' })
+		}
+		const body = request.body
 
-        const quest = {
-            name: body.name,
-            description: body.description,
-            points: body.points,
-            type: body.type,
-            done: body.done,
-            started: body.started,
-            activationCode: body.activationCode,
-            deactivated: body.deactivated
-        }
+		const quest = {
+			name: body.name,
+			description: body.description,
+			points: body.points,
+			type: body.type,
+			activationCode: body.activationCode,
+			deactivated: body.deactivated,
+			course: body.course
+		}
 
-        const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
-        response.status(200).send(Quest.format(updatedQuest))
+		const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
+		response.status(200).send(Quest.format(updatedQuest))
 
-    } catch (error) {
-        console.log(error)
-        response.status(400).send({ error: 'malformatted id' })
-    }
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'malformatted id' })
+	}
 })
 
 questsRouter.post('/:id/deactivated', async (request, response) => {
-    try {
-        if (await adminCheck.check(request) === false) {
-            return response.status(400).send({error: 'Admin priviledges needed'})
-        }
+	// changes quest's deactivated boolean based on the previous value. If course is deactivated then this post changes it to activated
+	try {
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'Admin priviledges needed' })
+		}
 
-        const oldQuest = await Quest.findById(request.params.id)
+		const oldQuest = await Quest.findById(request.params.id)
+		const deactivatedNew = oldQuest.deactivated === true ? false : true
 
-        const quest = {
-            name: oldQuest.name,
-            description: oldQuest.description,
-            points: oldQuest.points,
-            type: oldQuest.type,
-            done: oldQuest.done,
-            started: oldQuest.started,
-            activationCode: oldQuest.activationCode,
-            deactivated: true
-        }
+		const quest = {
+			name: oldQuest.name,
+			description: oldQuest.description,
+			points: oldQuest.points,
+			type: oldQuest.type,
+			done: oldQuest.done,
+			started: oldQuest.started,
+			activationCode: oldQuest.activationCode,
+			deactivated: deactivatedNew,
+			course: oldQuest.course
+		}
 
-        const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, {new: true})
-        response.status(200).send(Quest.format(updatedQuest))
+		const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
 
-    } catch (error) {
-        console.log(error)
-        response.status(400).send({error: 'malformatted id'})
-    }
+		response.status(200).send(Quest.format(updatedQuest))
+
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'malformatted id' })
+	}
 })
 
 questsRouter.delete('/:id', async (request, response) => {
 	//This does not reduce points from users
-    try {
-        if (await adminCheck.check(request) === false) {
-            return response.status(400).send({ error: 'Admin priviledges needed' })
-        }
-        const questToBeDeleted = await Quest.findById(request.params.id)
+	try {
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'Admin priviledges needed' })
+		}
+		const questToBeDeleted = await Quest.findById(request.params.id)
 
-        if (!questToBeDeleted) {
-            return response.status(404).send({error: 'quest not found'})
-        }
+		if (!questToBeDeleted) {
+			return response.status(404).send({ error: 'quest not found' })
+		}
 
 		await Promise.all(questToBeDeleted.usersStarted.map(async (userObj) => {
 			await findUserAndRemoveQuest(userObj.user, questToBeDeleted)
 		}))
 
-        await Quest.findByIdAndRemove(request.params.id)
-        response.status(200).end()
-    } catch (error) {
-        console.log(error)
-        response.status(400).send({ error: 'malformatted id' })
-    }
+		await Quest.findByIdAndRemove(request.params.id)
+
+		let questCourse = await Course.findById(questToBeDeleted.course)
+		questCourse.quests = questCourse.quests.filter(q => q.toString() !== questToBeDeleted._id.toString())
+		await questCourse.save()
+
+		response.status(200).end()
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'malformatted id' })
+	}
 })
 
 questsRouter.post('/:id/start', async (request, response) => {
-    //This one starts the quest
-    //Requires logged in user
-    //If quest id is not found, return error status
-    //If user has this quest, return error status
-    //Add quest and starttime to user.quests: quest ref and starttime=timestamp
-    //Also add user to quest.usersStarted and starttime
-    try {
+	//This one starts the quest
+	//Requires logged in user
+	//If quest id is not found, return error status
+	//If user has this quest, return error status
+	//Add quest and starttime to user.quests: quest ref and starttime=timestamp
+	//Also add user to quest.usersStarted and starttime
+	try {
 
-        let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
-        const dateNow = Date.now()
+		let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+		const dateNow = Date.now()
 
-        let startedQuest = await Quest.findById(request.params.id)
+		let startedQuest = await Quest.findById(request.params.id)
 
-        if (startedQuest.deactivated === true) {
-            return response.status(400).send({error: 'This quest is deactivated'})
-        }
+		if (startedQuest.deactivated === true) {
+			return response.status(400).send({ error: 'This quest is deactivated' })
+		}
 
-        const userQuestIds = user.quests.map(q => q.quest.toString())
-        const questUserIds = startedQuest.usersStarted.map(u => u.user.toString())
-        
-        if (userQuestIds.includes(startedQuest._id.toString()) || questUserIds.includes(user.id.toString())) {
+		const userQuestIds = user.quests.map(q => q.quest.toString())
+		const questUserIds = startedQuest.usersStarted.map(u => u.user.toString())
 
-            return response.status(400).send({ error: 'Quest already started' })
-        }
+		if (userQuestIds.includes(startedQuest._id.toString()) || questUserIds.includes(user.id.toString())) {
 
-        user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: dateNow, finishTime: null }])
+			return response.status(400).send({ error: 'Quest already started' })
+		}
 
-        startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: dateNow, finishTime: null }])
-        await user.save()
-        await startedQuest.save()
+		user.quests = user.quests.concat([{ quest: startedQuest._id, startTime: dateNow, finishTime: null }])
 
-        response.status(200).send(AppUser.format(user))
+		startedQuest.usersStarted = startedQuest.usersStarted.concat([{ user: user.id, startTime: dateNow, finishTime: null }])
+		await user.save()
+		await startedQuest.save()
 
-    } catch (error) {
-        console.log(error)
-        response.status(400).send({ error: 'Oops... something went wrong. :(' })
-    }
+		response.status(200).send(Quest.formatNonAdmin(startedQuest))
+
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'Oops... something went wrong. :(' })
+	}
 })
 
 
@@ -211,77 +239,80 @@ questsRouter.post('/:id/finish', async (request, response) => {
             return newQuest
         }) */
 
-    //This one starts the quest
-    //Requires logged in user
-    //If quest id is not found, return error status x
-    //If user does not have this quest, return error status x
-    //If user has this quest already finished, return error status x
-    //MAKE MONGO SAVE ATOMIC? Cannot right now
-    //Edit finishTime = dateNow user.quests where quest id matches 
-    //Also add user's finishTime to quest.usersStarted
-    try {
-        
-        let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
-        const dateNow = Date.now()
-        
-        //First add quest to user
-        let finishedQuests = user.quests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
-        let finishedQuestItem = finishedQuests[0]
-        
-        if (!finishedQuestItem) {
-            return response.status(400).send({ error: 'User has not started this quest' })
-        }
+	//This one starts the quest
+	//Requires logged in user
+	//If quest id is not found, return error status x
+	//If user does not have this quest, return error status x
+	//If user has this quest already finished, return error status x
+	//MAKE MONGO SAVE ATOMIC? Cannot right now
+	//Edit finishTime = dateNow user.quests where quest id matches 
+	//Also add user's finishTime to quest.usersStarted
+	try {
 
-        const questToCheck = await Quest.findById(finishedQuestItem.quest)
-        if (questToCheck.deactivated === true) {
-            return response.status(400).send({error: 'This quest is deactivated'})
-        }
+		let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+		const dateNow = Date.now()
+
+		//First add quest to user
+		let finishedQuests = user.quests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
+		let finishedQuestItem = finishedQuests[0]
+
+		if (!finishedQuestItem) {
+			return response.status(400).send({ error: 'User has not started this quest' })
+		}
+
+		const questToCheck = await Quest.findById(finishedQuestItem.quest)
+		if (questToCheck.deactivated === true) {
+			return response.status(400).send({ error: 'This quest is deactivated' })
+		}
 
 		//Check if quest type is location and check activationCode accordingly
 		if (questToCheck.type === 'location') {
 			const userLocation = request.body.activationCode
-			const correctLocation = questToCheck.activationCode.coords
+			const correctLocation = {
+				lat: questToCheck.activationCode.lat,
+				lng: questToCheck.activationCode.lng
+			}
 			const radius = questToCheck.activationCode.radius
 
-			if (!geodist(userLocation, correctLocation, {limit: radius, unit: 'meters'})) {
+			if (!geodist(userLocation, correctLocation, { limit: radius, unit: 'meters' })) {
 				return response.status(400).send({ error: 'Wrong location' })
 			}
 		} else if (questToCheck.activationCode !== request.body.activationCode) {
-            return response.status(400).send({ error: 'Wrong activationcode' })
-        }
+			return response.status(400).send({ error: 'Wrong activationcode' })
+		}
 
-        if (finishedQuestItem.finishTime !== null) {
-            return response.status(400).send({ error: 'User has already finished this quest' })
-        }
+		if (finishedQuestItem.finishTime !== null) {
+			return response.status(400).send({ error: 'User has already finished this quest' })
+		}
 
-        finishedQuestItem.finishTime = dateNow
+		finishedQuestItem.finishTime = dateNow
 
-        user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
-        user.quests = user.quests.concat(finishedQuestItem)
+		user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
+		user.quests = user.quests.concat(finishedQuestItem)
 
 
-        //Then add user to quest
-        let finishedQuest = await Quest.findById(request.params.id)
+		//Then add user to quest
+		let finishedQuest = await Quest.findById(request.params.id)
 
-        //Add points to user here
-        user.points = user.points + finishedQuest.points
+		//Add points to user here
+		user.points = user.points + finishedQuest.points
 
-        let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
-        let userCompletedItem = usersCompleted[0]
-        userCompletedItem.finishTime = dateNow
+		let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
+		let userCompletedItem = usersCompleted[0]
+		userCompletedItem.finishTime = dateNow
 
-        finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
-        finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
+		finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
+		finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
 
-        //Finally save to database and send response
-        await user.save()
-        await finishedQuest.save()
+		//Finally save to database and send response
+		await user.save()
+		await finishedQuest.save()
 
-        response.status(200).send(AppUser.format(user))
-    } catch (error) {
-        console.log(error)
-        response.status(400).send({ error: 'Oooooops... something went wrong. :(' })
-    }
+		response.status(200).send(Quest.formatNonAdmin(finishedQuest))
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'Oooooops... something went wrong. :(' })
+	}
 })
 
 module.exports = questsRouter

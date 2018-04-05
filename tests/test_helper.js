@@ -1,5 +1,6 @@
 const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
+const Course = require('../models/course')
 
 const initialQuests = [
     {
@@ -95,6 +96,11 @@ const usersInTestDb = async () => {
     return users
 }
 
+const coursesInTestDb = async () => {
+    const courses = await Course.find({})
+    return courses
+}
+
 const thisUserIsInTestDb = async (id) => {
     
     const user = await AppUser.findById(id)
@@ -105,5 +111,5 @@ const thisUserIsInTestDb = async (id) => {
 }
 
 module.exports = {
-    initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb
+    initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb, coursesInTestDb
 }

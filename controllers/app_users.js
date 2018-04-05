@@ -16,6 +16,7 @@ usersRouter.get('/', async (request, response) => {
 	const users = await AppUser
 		.find({})
 		.populate('quests.quest', { name: 1, type: 1, points: 1 }) //what do we want here?
+		.populate('courses.course', { name: 1 })
 	try {
 		if (await adminCheck.check(request) === true) {
 			return response.status(200).send(users.map(AppUser.format))

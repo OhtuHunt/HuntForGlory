@@ -1,8 +1,9 @@
 const AppUser = require('../../models/app_user')
 const Quest = require('../../models/quest')
+const Course = require('../../models/course')
 
 const authenticate = async (token) => {
-    let user
+	let user
     if (token === 'admin') {
         user = {
             "quests": [],
@@ -107,6 +108,34 @@ const authenticate = async (token) => {
 		const quest = await Quest.findById(questId)
 
 		return user
+    } else if (token.includes('hasJoinedCourse')) {
+        
+        user = {
+            "id": '5a85756ef41b1a447acce08a',
+            "tmc_id": 25936,
+            "username": 'hunter',
+            "points": 0,
+            "email": 'gyxgyx@helsinki.fi',
+            "admin": false,
+            "quests":[],
+            "courses":[{
+                _id: "5a85756ef41b1a447acce08a",
+                course: token.substring(16)
+            }]
+        }
+
+        const newUser = new AppUser(user)
+
+        await Course.findByIdAndUpdate(token.substring(16),
+            {   
+                users: [{
+                    _id: '5a981abbabd1a43cd4055f7c',
+                    user: newUser._id,
+                }]
+            })
+
+        return newUser
+
     } else {
         user = {
             "quests": [],
