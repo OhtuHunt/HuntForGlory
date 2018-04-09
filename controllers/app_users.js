@@ -99,6 +99,24 @@ usersRouter.put('/:id', async (request, response) => {
 	}
 })
 
+
+// check the format if it is needed to be modified for this one
+usersRouter.get('/:id', async (request, response) => {
+	try {
+		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+
+		const userFromDb = await AppUser.findById(request.params.id)
+		if(await adminCheck.check(request) === true) {
+			response.status(200).send(AppUser.format(userFromDb))
+		} else {
+			response.status(200).send(AppUser.formatNonAdmin(userFromDb))
+		}			
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'something went wrong'})
+	}
+})
+
 //   usersRouter.get('/api/users/tmc/:id', (request, response) => {
 //     AppUser
 //       .findOne({"tmc_id": request.params.id})

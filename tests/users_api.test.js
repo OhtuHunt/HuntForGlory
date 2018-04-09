@@ -316,6 +316,54 @@ describe('API PUT user in api/user/:id', async () => {
     })
 })
 
+describe('API GET user in api/users/:id', async () => {
+
+	describe('Admin user', async () => {
+
+        let wrongUser
+
+        beforeEach(async () => {
+            await User.remove({})
+
+            let userObjects = initialUsers.map(user => new User(user))
+
+            adminUser = new User({
+                "quests": [],
+                "username": "admin",
+                "email": "editor@helsinki.fi",
+                "tmc_id": 25000,
+                "admin": true,
+                "points": 0
+            })
+
+            userObjects.push(adminUser)
+
+            wrongUser = new User({
+                "quests": [],
+                "username": "wrong",
+                "email": "wrong@helsinki.fi",
+                "tmc_id": 99000,
+                "admin": false,
+                "points": 0
+            })
+
+            userObjects.push(wrongUser)
+            const promiseArray = userObjects.map(user => user.save())
+            await Promise.all(promiseArray)
+        })
+
+        test('gets one he wants', async () => {
+            const response = await api
+                .get(`/api/users/${wrongUser._id}`)
+                .set('Authorization', `bearer admin`)
+                .expect(200)
+
+            expect(response.body.username).toBe('wrong')
+            expect(response.body.email).toBe('wrong@helsinki.fi')
+        })
+    })
+})
+
 afterAll(() => {
     server.close()
 })
