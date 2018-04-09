@@ -15,6 +15,13 @@ const findQuestAndEdit = async (questId, courseToBeDeleted) => {
 	const quest = await Quest.findByIdAndUpdate(userId, { quest: courseToBeDeleted.name }, { deactivated: true })
 }
 
+const findUserAndRemoveCourse = async (userId, courseToBeRemoved) => {
+	const user = await AppUser.findById(userId)
+	const userCourses = user.courses.filter(c => c.course.toString() !== courseToBeRemoved._id.toString())
+	user.courses = userCourses
+	await user.save()
+}
+
 coursesRouter.get('/', async (request, response) => {
 	// TODO refactor to populate when joined
 	try {
@@ -108,6 +115,11 @@ coursesRouter.delete('/:id', async (request, response) => {
 		await Promise.all(courseToBeDeleted.quests.map(async quest => {
 			await Quest.findByIdAndUpdate(quest, { deactivated: true })
 			//await findQuestAndEdit(quest, courseToBeDeleted)
+		}))
+
+		//Remove course from all users that have joined it
+		await Promise.all(courseToBeDeleted.users.map(async (userObj) => {
+			await findUserAndRemoveCourse(userObj.user, courseToBeDeleted)
 		}))
 
 		//Remove course from db

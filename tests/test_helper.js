@@ -86,6 +86,13 @@ initialUsers = [
 
 ]
 
+initialCourses = [
+	{
+		name: 'initialCourse',
+		courseCode: 'INITC'
+	}
+]
+
 const questsInTestDb = async () => {
     const quests = await Quest.find({})
     return quests

@@ -2,7 +2,7 @@ const Quest = require('../models/quest')
 const User = require('../models/app_user')
 const Course = require('../models/course')
 const supertest = require('supertest')
-const { initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb, coursesInTestDb } = require('./test_helper')
+const { initialQuests, questsInTestDb, initialUsers, initialCourses, usersInTestDb, thisUserIsInTestDb, coursesInTestDb } = require('./test_helper')
 const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
@@ -106,7 +106,8 @@ describe('API DELETE user from api/user/:id', async () => {
             "email": "deletingUser@helsinki.fi",
             "tmc_id": 99998,
             "admin": false,
-            "points": 0
+			"points": 0,
+			"courses": []
         })
         userObjects.push(userToBeDeleted)
 
@@ -163,6 +164,32 @@ describe('API DELETE user from api/user/:id', async () => {
             const refreshedQuest = await Quest.findById(quest._id)
 
             await expect(refreshedQuest.usersStarted[0]).toEqual(undefined)
+		})
+		
+		test('users information is removed from a course user had joined', async () => {
+			let course = new Course({
+				name: 'testCourse',
+				courseCode: 'TESTC'
+			})
+
+			course = await course.save()
+
+			await api
+				.post(`/api/courses/${course._id}/join`)
+				.set('Authorization', `bearer userWithId ${userToBeDeleted._id}`)
+
+            userToBeDeleted = await User.findById(userToBeDeleted._id)
+            course = await Course.findById(course._id)
+
+            expect(course.users[0].user.toString()).toEqual(userToBeDeleted._id.toString())
+            const response = await api
+                .delete(`/api/users/${userToBeDeleted._id}`)
+                .set('Authorization', `bearer admin`)
+                .expect(200)
+
+            const refreshedCourse = await Course.findById(course._id)
+
+            await expect(refreshedCourse.users[0]).toEqual(undefined)
         })
 
         test('if id is wrong, return malformatted id error', async () => {
@@ -201,8 +228,11 @@ describe('API DELETE user from api/user/:id', async () => {
             expect(usersBefore.length).toBe(usersAfter.length)
         })
     })
+})
 
-    describe('Regular user editing', async () => {
+describe('API PUT user in api/user/:id', async () => {
+
+	describe('Regular user editing', async () => {
         let editorUser
 
         beforeEach(async () => {
@@ -282,6 +312,54 @@ describe('API DELETE user from api/user/:id', async () => {
 
             expect(response.body.error).toBe('You are not authorized to do this')
             // correct error msg given
+        })
+    })
+})
+
+describe('API GET user in api/users/:id', async () => {
+
+	describe('Admin user', async () => {
+
+        let wrongUser
+
+        beforeEach(async () => {
+            await User.remove({})
+
+            let userObjects = initialUsers.map(user => new User(user))
+
+            adminUser = new User({
+                "quests": [],
+                "username": "admin",
+                "email": "editor@helsinki.fi",
+                "tmc_id": 25000,
+                "admin": true,
+                "points": 0
+            })
+
+            userObjects.push(adminUser)
+
+            wrongUser = new User({
+                "quests": [],
+                "username": "wrong",
+                "email": "wrong@helsinki.fi",
+                "tmc_id": 99000,
+                "admin": false,
+                "points": 0
+            })
+
+            userObjects.push(wrongUser)
+            const promiseArray = userObjects.map(user => user.save())
+            await Promise.all(promiseArray)
+        })
+
+        test('gets one he wants', async () => {
+            const response = await api
+                .get(`/api/users/${wrongUser._id}`)
+                .set('Authorization', `bearer admin`)
+                .expect(200)
+
+            expect(response.body.username).toBe('wrong')
+            expect(response.body.email).toBe('wrong@helsinki.fi')
         })
     })
 })

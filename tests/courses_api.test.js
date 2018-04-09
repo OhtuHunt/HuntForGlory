@@ -105,6 +105,51 @@ describe('api/courses: ', async () => {
 
 		})
 	})
+
+	describe('DELETE api/courses/:id', async () => {
+
+		let courseToBeDeleted
+		let testUser
+
+		beforeEach(async () => {
+			await Course.remove({})
+			await User.remove({})
+			const newCourse = new Course({
+				name: 'deletedCourse',
+				courseCode: 'TKT007'
+			})
+			courseToBeDeleted = await newCourse.save()
+
+			const newUser = new User({
+				quests: [],
+				username: "hunter",
+				email: "hunter@helsinki.fi",
+				tmc_id: 25000,
+				admin: true,
+				points: 0
+			})
+			testUser = await newUser.save()
+		})
+
+		test('when course is deleted, it is also deleted from user', async () => {
+			await api
+				.post(`/api/courses/${courseToBeDeleted._id}/join`)
+				.set('Authorization', `bearer userWithId ${testUser._id}`)
+
+			courseToBeDeleted = await Course.findById(courseToBeDeleted._id)
+			testUser = await User.findById(testUser._id)
+
+			expect(courseToBeDeleted.users[0].user.toString()).toEqual(testUser._id.toString())
+			expect(testUser.courses[0].course.toString()).toEqual(courseToBeDeleted._id.toString())
+			const response = await api
+				.delete(`/api/courses/${courseToBeDeleted._id}`)
+				.set('Authorization', `bearer admin`)
+				.expect(200)
+
+			const refreshedUser = await User.findById(testUser._id)
+			expect(refreshedUser.courses[0]).toEqual(undefined)
+		})
+	})
 })
 
 afterAll(() => {

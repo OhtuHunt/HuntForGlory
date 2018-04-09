@@ -1,6 +1,7 @@
 const usersRouter = require('express').Router()
 const AppUser = require('../models/app_user')
 const Quest = require('../models/quest')
+const Course = require('../models/course')
 const tmcAuth = require('../utils/tmcAuth')
 const adminCheck = require('../utils/adminCheck')
 const tokenParser = require('../utils/tokenParser')
@@ -10,6 +11,13 @@ const findQuestAndRemoveUser = async (questId, userToBeRemoved) => {
 	const questUsers = quest.usersStarted.filter(u => u.user.toString() !== userToBeRemoved._id.toString())
 	quest.usersStarted = questUsers
 	await quest.save()
+}
+
+const findCourseAndRemoveUser = async (courseId, userToBeRemoved) => {
+	const course = await Course.findById(courseId)
+	const courseUsers = course.users.filter(u => u.user.toString() !== userToBeRemoved._id.toString())
+	course.users = courseUsers
+	await course.save()
 }
 
 usersRouter.get('/', async (request, response) => {
@@ -34,7 +42,7 @@ usersRouter.delete('/:id', async (request, response) => {
 	/* Check if admin or user himself is requesting delete
 		Get the user from database
 		Check that the user actually exists
-		Remove user from all the quests in database
+		Remove user from all the quests and courses in database
 		- Promise.all because we want this to be coherent and pass our tests
 		Remove user from database based on id
 	 */
@@ -53,6 +61,10 @@ usersRouter.delete('/:id', async (request, response) => {
 
 		await Promise.all(userToBeDeleted.quests.map(async (questObj) => {
 			await findQuestAndRemoveUser(questObj.quest, userToBeDeleted)
+		}))
+
+		await Promise.all(userToBeDeleted.courses.map(async (courseObj) => {
+			await findCourseAndRemoveUser(courseObj.course, userToBeDeleted)
 		}))
 
 		await AppUser.findByIdAndRemove(request.params.id)
@@ -84,6 +96,24 @@ usersRouter.put('/:id', async (request, response) => {
 	} catch (error) {
 		console.log(error)
 		response.status(400).send({ error: 'malformatted id' })
+	}
+})
+
+
+// check the format if it is needed to be modified for this one
+usersRouter.get('/:id', async (request, response) => {
+	try {
+		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+
+		const userFromDb = await AppUser.findById(request.params.id)
+		if(await adminCheck.check(request) === true) {
+			response.status(200).send(AppUser.format(userFromDb))
+		} else {
+			response.status(200).send(AppUser.formatNonAdmin(userFromDb))
+		}			
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'something went wrong'})
 	}
 })
 
