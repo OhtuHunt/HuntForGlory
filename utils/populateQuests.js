@@ -11,10 +11,10 @@ const initialCourse = 	{
 
 const initialQuests = [
 	{
-        name: "Osallistu aloitusluennolle",
+        name: "Aloitusluennolle",
         description: "Osallistu kurssin OTM aloitusluennolle",
         points: 10,
-        type: "solo quest",
+        type: "activation code",
 		activationCode: "code",
 		usersStarted: [],
 		deactivated: false
@@ -23,16 +23,52 @@ const initialQuests = [
         name: "Käy pajassa",
         description: "Käy missä tahansa kurssin pajassa",
         points: 10,
-        type: "solo quest",
+        type: "activation code",
         activationCode: "code",
 		usersStarted: [],
 		deactivated: false
     },
     {
-        name: "Pidä lukupiiri muiden oppilaiden kanssa",
+        name: "Pidä lukupiiri",
         description: "Järjestäkää kurssin aikana lukupiiri noin 4-10 opiskelijan kanssa ja kertokaa assarille",
         points: 10,
-        type: "Team quest",
+        type: "activation code",
+        activationCode: "code",
+		usersStarted: [],
+		deactivated: false
+	},
+	{
+        name: "Osallistu demoon",
+        description: "Osallistu kurssin loppudemoon.",
+        points: 10,
+        type: "activation code",
+        activationCode: "code",
+		usersStarted: [],
+		deactivated: false
+	},
+	{
+        name: "Palauta viikko1",
+        description: "Palauta viikon 1 tehtävät jossakin laskarissa assarille.",
+        points: 10,
+        type: "activation code",
+        activationCode: "code",
+		usersStarted: [],
+		deactivated: false
+	},
+	{
+        name: "Tee vertaisarvio",
+        description: "Täytä vertaisarviolomake jonka saat sähköpostiisi.",
+        points: 10,
+        type: "activation code",
+        activationCode: "code",
+		usersStarted: [],
+		deactivated: false
+	},
+	{
+        name: "Kurssipalaute",
+        description: "Anna kurssipalaute täyttämällä palautelomake.",
+        points: 10,
+        type: "activation code",
         activationCode: "code",
 		usersStarted: [],
 		deactivated: false
