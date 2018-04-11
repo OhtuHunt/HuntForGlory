@@ -285,6 +285,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
 			return response.status(400).send({ error: 'User has already finished this quest' })
 		}
 
+		//Mark finish time to user
 		finishedQuestItem.finishTime = dateNow
 
 		user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
@@ -297,6 +298,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		//Add points to user here
 		user.points = user.points + finishedQuest.points
 
+		//Mark finish time to quest
 		let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
 		let userCompletedItem = usersCompleted[0]
 		userCompletedItem.finishTime = dateNow
@@ -304,9 +306,23 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
 		finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
 
+		//Mark points to course here
+		let questCourse = await Course.findById(finishedQuest.course)
+		if (!questCourse) {
+			return response.status(500).send({ error: 'This quest does not have a course'})
+		}
+
+		let courseUsers = questCourse.users.filter(userItem => userItem.user.toString() === user.id.toString())
+		let userCourseItem = courseUsers[0]
+		userCourseItem.points = userCourseItem.points + finishedQuest.points
+
+		questCourse.users = questCourse.users.filter(userItem => userItem.user.toString() !== user.id.toString())
+		questCourse.users = questCourse.users.concat(userCourseItem)
+
 		//Finally save to database and send response
 		await user.save()
 		await finishedQuest.save()
+		await questCourse.save()
 
 		response.status(200).send(Quest.formatNonAdmin(finishedQuest))
 	} catch (error) {

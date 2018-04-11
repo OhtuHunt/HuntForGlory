@@ -72,7 +72,16 @@ const initialQuests = [
         activationCode: "code",
 		usersStarted: [],
 		deactivated: false
-    }
+	},
+	{
+		name: "Paikka-quest",
+    	description: "Sijainti on luentosalin B123 läheisyydessä",
+    	points: 150,
+    	type: "location",
+		activationCode: {"lat": 60.20473525458362,"lng": 24.96184882436853, "radius": 6.727390544005631},
+		usersStarted: [],
+		deactivated: false
+	}
 ]
 
 const questObjects = initialQuests.map(quest => new Quest(quest))
@@ -93,7 +102,6 @@ const removeOldQuestsAndAddNew = async () => {
 			quest.course = course._id.toString()
 			await quest.save()
 			course.quests = course.quests.concat(quest._id.toString())
-			//await Course.findByIdAndUpdate(quest._id, {course: course._id }, { new: true })
 			console.log(`${quest.name} saved`)
 		}))
 		await course.save()

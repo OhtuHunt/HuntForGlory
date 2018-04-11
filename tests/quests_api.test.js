@@ -275,6 +275,7 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
 	beforeEach(async () => {
 		await Quest.remove({})
 		await User.remove({})
+		await Course.remove({})
 	})
 
 	test('if user has started quest, user can complete it', async () => {
@@ -289,6 +290,18 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
 
 		await testUser.save()
 
+		const course = new Course({
+			name: "testCourse123",
+			courseCode: "1123",
+			quests: [],
+			users: [{
+				_id: "5a981abbabd1a43cd4055f7c",
+				user: testUser._id,
+				points: 0
+			}]
+		})
+		await course.save()
+
 		const quest = new Quest({
 			name: "STARTED QUEST",
 			description: "THIS QUEST HAS BEEN STARTED ALREADY",
@@ -302,7 +315,8 @@ describe('POST, user completing quest in api/quests/:id/finish', async () => {
 				user: testUser._id,
 				startTime: "2018-03-01T15:22:35.445Z",
 				finishTime: null
-			}]
+			}],
+			course: course._id
 		})
 		await quest.save()
 
@@ -415,10 +429,12 @@ describe('Quest deactivation', async () => {
 	let activeQuest
 	let notActiveQuest
 	let testUser
+	let testCourse
 
 	beforeEach(async () => {
 		await Quest.remove({})
 		await User.remove({})
+		await Course.remove({})
 
 		activeQuest = new Quest({
 			name: "ACTIVE QUEST",
@@ -450,6 +466,18 @@ describe('Quest deactivation', async () => {
 			admin: true,
 			points: 0
 		})
+
+		testCourse = new Course({
+			name: "testCourse123",
+			courseCode: "1123",
+			quests: [],
+			users: [{
+				_id: "5a981abbabd1a43cd4055f7c",
+				user: testUser._id,
+				points: 0
+			}]
+		})
+
 	})
 
 	test('GET /api/quests to quests returns only acive quests for normal user', async () => {
@@ -543,6 +571,7 @@ describe('Quest deactivation', async () => {
 	})
 
 	test('POST /api/quest/:id/finish marks the active quest as finished if user gives the correct activation code and has started the quest', async () => {
+		await testCourse.save()
 
 		const quest = new Quest({
 			name: "STARTED QUEST",
@@ -558,13 +587,22 @@ describe('Quest deactivation', async () => {
 				user: "5a85756ef41b1a447acce08a",
 				startTime: "2018-03-01T15:22:35.445Z",
 				finishTime: null
-			}]
+			}],
+			course: testCourse._id
 		})
 		const savedQuest = await quest.save()
 
+		testUser.quests = [{
+			_id: "5a981abbabd1a43cd4055f7c",
+			quest: savedQuest._id,
+			startTime: "2018-03-01T15:22:35.445Z",
+			finishTime: null
+		}]
+		await testUser.save()
+
 		const response = await api
 			.post(`/api/quests/${savedQuest._id}/finish`)
-			.set('Authorization', `bearer hasQuestStarted ${savedQuest._id}`)
+			.set('Authorization', `bearer userIdAndQuestId ${testUser._id},${savedQuest._id}`)
 			.send({ activationCode: "STARTED" })
 			.expect(200)
 	})

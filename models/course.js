@@ -6,7 +6,8 @@ const courseSchema = new mongoose.Schema({
     quests: [],
     users: [
         {
-            user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' }
+			user: { type: mongoose.Schema.Types.ObjectId, ref: 'AppUser' },
+			points: Number
         }]
 })
 
