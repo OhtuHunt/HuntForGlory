@@ -1,29 +1,22 @@
 const divideIntoGroups = (groupAmount, users) => {
-
     const shuffledUsers = shuffle(users)
-    const groupSizeMax = Math.ceil(users.length / groupAmount)
-    const groupSizeMin = Math.floor(users.length / groupAmount)
-
     let groups = []
-    let isBreak = false
 
+    //init groups
     for (let i = 0; i < groupAmount; i++) {
-        let groupNow = []
-        for (let j = i * groupSize; j < i * groupSize + groupSize; j++) {
-            if (!shuffledUsers[j]) {
-                isBreak = true
-                break
-            }
-            groupNow = groupNow.concat(shuffledUsers[j])
-        }
-        if (isBreak) {
-            break
-        }
-        groups.push(groupNow)
+        groups[i] = []
     }
 
-    return groups
+    //assign users into groups
+    let whichGroup = 0
 
+    for (let j = 0; j < users.length; j++) {
+        whichGroup = whichGroup > groupAmount-1 ? 0 : whichGroup
+        let group = groups[whichGroup].concat(users[j])
+        groups[whichGroup] = group
+        whichGroup++
+    }
+    return groups
 }
 
 function shuffle(array) {
