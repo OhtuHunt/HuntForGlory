@@ -4,20 +4,23 @@ const tmcAuth = require('../utils/tmcAuth')
 const tokenParser = require('../utils/tokenParser')
 const groupRouter = require('express').Router()
 const Group = require('../models/group')
+const Course = require('../models/course')
 const divideIntoGroups = require('../utils/divideIntoGroups')
 
 groupRouter.post('/', async (request, response) => {
     try {
 
-        if (adminCheck.check(request) === false) {
+        if (await adminCheck.check(request) === false) {
             return response.status(400).send({error: 'You must be an admin to do this'})
         }
 
         const body = request.body
 
         const groupAmount = body.groupAmount
-
+        console.log(body.course)
+        console.log(body.groupAmount)
         const course = await Course.findById(body.course)
+        
         const courseUsers = course.users.map(u => u.user)
 
         const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
@@ -30,7 +33,7 @@ groupRouter.post('/', async (request, response) => {
             await groupObject.save()
         }))
 
-        return response.status(200)
+        return response.status(200).end()
 
     } catch (error) {
         console.log(error)
