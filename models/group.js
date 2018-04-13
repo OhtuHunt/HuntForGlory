@@ -12,6 +12,7 @@ const groupSchema = new mongoose.Schema({
 groupSchema.statics.format = (group) => {
     return {
         //instructor: group.instructor,
+        id: group.id,
         course: group.course,
         users: group.users
     }

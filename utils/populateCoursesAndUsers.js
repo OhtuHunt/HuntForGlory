@@ -6,7 +6,7 @@ const config = require('./config')
 
 const initialCourse = {
     name: 'OTM',
-    courseCode: 'OTM',
+    courseCode: 'TKT20002',
     users: []
 }
 
@@ -78,7 +78,7 @@ userObjects.forEach(user => {
 	user.courses = user.courses.concat([{ course: courseObject._id }])
 })
 
-const removeQuestsAndUsersAndAddNew = async () => {
+const removeCoursesAndUsersAndAddNew = async () => {
     try {
         await AppUser.remove({})
         await Course.remove({})
@@ -99,4 +99,4 @@ const removeQuestsAndUsersAndAddNew = async () => {
 
 //mongoose.connect(process.env.DEV_MONGODB_URI)
 mongoose.connect('mongodb://hunter:hunter1@ds113849.mlab.com:13849/testhuntforglory')
-removeQuestsAndUsersAndAddNew()
+removeCoursesAndUsersAndAddNew()
