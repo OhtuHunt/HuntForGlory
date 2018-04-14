@@ -5,6 +5,7 @@ const tokenParser = require('../utils/tokenParser')
 const groupRouter = require('express').Router()
 const Group = require('../models/group')
 const Course = require('../models/course')
+const mongoose = require('mongoose')
 const divideIntoGroups = require('../utils/divideIntoGroups')
 
 
@@ -28,8 +29,6 @@ groupRouter.post('/', async (request, response) => {
         const body = request.body
 
         const groupAmount = body.groupAmount
-        //console.log(body.course)
-        //console.log(body.groupAmount)
         const course = await Course.findById(body.course)
 
         const courseUsers = course.users.map(u => u.user)
@@ -71,7 +70,7 @@ groupRouter.get('/abc', async (request, response) => {
     }
 })
 
-/* Fix cast error
+
 groupRouter.put('/:id', async (request, response) => {
 
     try {
@@ -80,10 +79,15 @@ groupRouter.put('/:id', async (request, response) => {
         }
 
         const body = request.body
+        console.log(body)
+
+        // NEED TO FIX USERS UPDATE
+        let usersIds = body.users.map(user => mongoose.Types.ObjectId(user.id))
+        console.log(usersIds)
 
         const group = {
-            course: body.course,
-            users: body.group
+            course: mongoose.Types.ObjectId(body.course),
+            users: usersIds
         }
 
         const updatedGroup = await Group.findByIdAndUpdate(request.params.id, group, { new: true })
@@ -93,7 +97,7 @@ groupRouter.put('/:id', async (request, response) => {
         console.log(error)
         return response.status(400).send({ error: 'Something went wrong...' })
     }
-})*/
+})
 
 groupRouter.delete('/:id', async (request, response) => {
 
