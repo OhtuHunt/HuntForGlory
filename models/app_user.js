@@ -39,6 +39,12 @@ userSchema.statics.formatNonAdmin = (user) => {
     }
 }
 
+userSchema.statics.formatOnlyId = (user) => {
+    return {
+        id: user.id,
+    }
+}
+
 const AppUser = mongoose.model('AppUser', userSchema)
 
 module.exports = AppUser

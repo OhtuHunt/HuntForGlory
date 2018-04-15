@@ -108,6 +108,11 @@ const coursesInTestDb = async () => {
     return courses
 }
 
+const giveCourseFromDb = async () => {
+    const course = await Course.findOne({})
+    return course
+}
+
 const thisUserIsInTestDb = async (id) => {
     
     const user = await AppUser.findById(id)
@@ -118,5 +123,5 @@ const thisUserIsInTestDb = async (id) => {
 }
 
 module.exports = {
-    initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb, coursesInTestDb
+    initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb, coursesInTestDb, giveCourseFromDb
 }

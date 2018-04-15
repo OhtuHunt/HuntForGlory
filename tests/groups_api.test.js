@@ -2,17 +2,48 @@ const User = require('../models/app_user')
 const Course = require('../models/course')
 const Group = require('../models/group')
 const supertest = require('supertest')
-const { initialUsers, coursesInTestDb } = require('./test_helper')
+const { initialUsers, coursesInTestDb, usersInTestDb, giveCourseFromDb } = require('./test_helper')
 const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
 
 describe('api/groups/ ', async () => {
-	describe.only('test POST when user is admin, ', async () => {
+	describe.only('test GET , ', async () => {
 		beforeAll(async () => {
             await Group.remove({})
             await User.remove({})
-            await Course.remove({})
+			await Course.remove({})
+			
+			const userObjects = initialUsers.map(user => new User(user))
+			const promiseArray = userObjects.map(user => user.save())
+			await Promise.all(promiseArray)
+
+			const newCourse = new Course({
+				name: 'testCourse',
+				courseCode: 'TKT007'
+			})
+			const testCourse = await newCourse.save()
+			const testUsers = await usersInTestDb()
+
+			const testUsersIds = testUsers.map(User.formatOnlyId)
+
+			const newGroup = new Group({
+				course: testCourse.id,
+				users: testUsersIds
+			})
+			const testGroup = await newGroup.save()
+		})
+
+		test('that response is correct', async () => {
+			const response = await api
+			.get('/api/groups')
+
+			expect(200)
+
+			const courseId = response.body.map(r => r.course)
+			const testCourse = await giveCourseFromDb()
+
+			expect(courseId.toString()).toBe(testCourse.id.toString())
 		})
 
 		test('for skipping this until ready', async () => {

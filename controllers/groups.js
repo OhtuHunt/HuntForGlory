@@ -4,6 +4,7 @@ const tmcAuth = require('../utils/tmcAuth')
 const tokenParser = require('../utils/tokenParser')
 const groupRouter = require('express').Router()
 const Group = require('../models/group')
+const User = require('../models/app_user')
 const Course = require('../models/course')
 const mongoose = require('mongoose')
 const divideIntoGroups = require('../utils/divideIntoGroups')
@@ -81,8 +82,8 @@ groupRouter.put('/:id', async (request, response) => {
         const body = request.body
         console.log(body)
 
-        // NEED TO FIX USERS UPDATE
-        let usersIds = body.users.map(user => mongoose.Types.ObjectId(user.id))
+        // NEED TO FIX USERS UPDATE, error here
+        let usersIds = body.users.map(mongoose.Types.ObjectId(User.formatOnlyId))
         console.log(usersIds)
 
         const group = {
