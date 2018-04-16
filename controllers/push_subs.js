@@ -5,7 +5,7 @@ const tokenParser = require('../utils/tokenParser')
 const subsRouter = require('express').Router()
 const PushSubscription = require('../models/push_sub')
 const webpush = require('web-push')
-const config = require('../../utils/config') // is needed?
+const config = require('../utils/config') // is needed?
 
 require('dotenv').config()
 
