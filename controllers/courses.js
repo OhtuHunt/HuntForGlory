@@ -26,6 +26,7 @@ coursesRouter.get('/', async (request, response) => {
 	// TODO refactor to populate when joined
 	try {
 		const courses = await Course.find({})
+			.populate('users.user', { username: 1 })
 		return response.status(200).send(courses.map(Course.format))
 
 	} catch (error) {

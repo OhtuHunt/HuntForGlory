@@ -11,8 +11,8 @@ const divideIntoGroups = (groupAmount, users) => {
     let whichGroup = 0
 
     for (let j = 0; j < users.length; j++) {
-        groups[whichGroup] = groups[whichGroup].concat(shuffledUsers[j])
-        whichGroup = (whichGroup > groupAmount-2) ? 0 : whichGroup+1
+        groups[whichGroup] = groups[whichGroup].concat({ user: shuffledUsers[j] })
+        whichGroup = (whichGroup > groupAmount - 2) ? 0 : whichGroup + 1
     }
     return groups
 }

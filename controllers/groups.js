@@ -73,22 +73,17 @@ groupRouter.get('/abc', async (request, response) => {
 
 
 groupRouter.put('/:id', async (request, response) => {
-
+//Requires course id and list of user ids in users: [ {user: id}, {user: id} ] format
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'You must be an admin to do this' })
         }
 
         const body = request.body
-        console.log(body)
-
-        // NEED TO FIX USERS UPDATE, error here
-        let usersIds = body.users.map(mongoose.Types.ObjectId(User.formatOnlyId))
-        console.log(usersIds)
 
         const group = {
-            course: mongoose.Types.ObjectId(body.course),
-            users: usersIds
+            course: body.course,
+            users: body.users
         }
 
         const updatedGroup = await Group.findByIdAndUpdate(request.params.id, group, { new: true })
@@ -99,6 +94,36 @@ groupRouter.put('/:id', async (request, response) => {
         return response.status(400).send({ error: 'Something went wrong...' })
     }
 })
+
+groupRouter.post('/move_user', async (request, response) => {
+	//Requires three ids: Group where user is moved from, group where user is moved to, and user id
+		try {
+			if (await adminCheck.check(request) === false) {
+				return response.status(400).send({ error: 'You must be an admin to do this' })
+			}
+	
+			const body = request.body
+
+			let groupFrom = await Group.findById(body.groupFromId)
+			let groupTo = await Group.findById(body.groupToId)
+			const userId = body.userId
+	
+			//Remove user from groupFrom
+			groupFromUsersAfter = groupFrom.users.filter(userItem => userItem.user.toString() !== userId.toString())
+			groupFrom.users = groupFromUsersAfter
+			await groupFrom.save()
+
+			//Add user to groupTo
+			groupToUsersAfter = groupTo.users.concat({ user: userId })
+			groupTo.users = groupToUsersAfter
+			await groupTo.save()
+
+			response.status(200).send(Group.format(groupTo))
+		} catch (error) {
+			console.log(error)
+			return response.status(400).send({ error: 'Something went wrong...' })
+		}
+	})
 
 groupRouter.delete('/:id', async (request, response) => {
 

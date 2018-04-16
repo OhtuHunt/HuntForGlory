@@ -97,6 +97,6 @@ const removeCoursesAndUsersAndAddNew = async () => {
     }
 }
 
-//mongoose.connect(process.env.DEV_MONGODB_URI)
-mongoose.connect('mongodb://hunter:hunter1@ds113849.mlab.com:13849/testhuntforglory')
+mongoose.connect(process.env.DEV_MONGODB_URI)
+//mongoose.connect('mongodb://hunter:hunter1@ds113849.mlab.com:13849/testhuntforglory')
 removeCoursesAndUsersAndAddNew()
