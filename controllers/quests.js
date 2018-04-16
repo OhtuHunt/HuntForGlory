@@ -24,7 +24,6 @@ questsRouter.get('/', async (request, response) => {
 
 		if (user.admin === true) {
 			let quests = await Quest.find({})
-				.populate('usersStarted.user', { username: 1 })
 				.populate('course', { name: 1 })
 			return response.status(200).send(quests.map(Quest.format))
 		} else {
@@ -33,7 +32,6 @@ questsRouter.get('/', async (request, response) => {
 
 			await Promise.all(courses.map(async course => {
 				let questHelp = await Quest.find({ course: course })
-					.populate('usersStarted.user', { username: 1 })
 					.populate('course', { name: 1 })
 				quests = quests.concat(questHelp)
 			}))
