@@ -9,6 +9,19 @@ const config = require('../utils/config') // is needed?
 
 require('dotenv').config()
 
+subsRouter.delete('/delete', async (request, response) => {
+	try {
+		const body = request.body
+
+		await PushSubscription.findByIdAndRemove(request.params.id)
+		response.status(200).end()
+
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'something went wrong' })
+	}
+})
+
 subsRouter.post('/save', async (request, response) => {
 	try {
 		if (!request.body || !request.body.endpoint) {
@@ -38,6 +51,7 @@ subsRouter.post('/save', async (request, response) => {
 const triggerPushMessages = (subscription, dataToSend) => {
 	try {
 		webpush.sendNotification(subscription, dataToSend)
+
 	} catch (error) {
 		console.log(error)
 		response.status(400).send({ error: 'something went wrong' })
@@ -56,8 +70,10 @@ const triggerPushMsg = function (subscription, dataToSend) {
 		});
 };*/
 
+// ADD REMOVE FOR SUBS!!!!
 subsRouter.post('/send-push', async (request, response) => {
 	try {
+		const dataToSend = request.body.dataToSend
 		// you need to have the keys in your personal .env file
 		const vapidKeys = {
 			publicKey: process.env.PUBLIC_PUSHKEY,
@@ -74,9 +90,8 @@ subsRouter.post('/send-push', async (request, response) => {
 		const subscriptions = await PushSubscription.find({})
 		for (let i = 0; i < subscriptions.length; i++) {
 					const subscription = subscriptions[i];
-					promiseChain = promiseChain.then(() => {
-						return triggerPushMsg(subscription, dataToSend);
-					});
+					 await triggerPushMessages(subscription, dataToSend);
+					 
 				}
 
 		
