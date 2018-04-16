@@ -30,7 +30,8 @@ feedbackRouter.post('/', async (request, response) => {
         const feedbackObject = new Feedback({
             title: body.title,
             content: body.content,
-            read: false
+            read: false,
+            type: body.type
         })
 
         const savedFeedback = await feedbackObject.save()

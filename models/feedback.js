@@ -3,7 +3,8 @@ const mongoose = require('mongoose')
 const feedbackSchema = new mongoose.Schema({
     title: String,
     content: String,
-    read: Boolean
+    read: Boolean,
+    type: String
 })
 
 feedbackSchema.statics.format = (feedback) => {
@@ -11,7 +12,8 @@ feedbackSchema.statics.format = (feedback) => {
         id: feedback.id,
         title: feedback.title,
         content: feedback.content,
-        read: feedback.read
+        read: feedback.read,
+        type: feedback.type
     }
 }
 
