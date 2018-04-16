@@ -5,7 +5,7 @@ const tokenParser = require('../utils/tokenParser')
 const subsRouter = require('express').Router()
 const PushSubscription = require('../models/push_sub')
 
-subsRouter.post('/save-subscription/', async (request, response) => {
+subsRouter.post('/save', async (request, response) => {
 	try {
 		if (!request.body || !request.body.endpoint) {
 			return response.status(500).send({ error: 'Subscription must have an endpoint' })
