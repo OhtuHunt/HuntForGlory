@@ -90,8 +90,7 @@ subsRouter.post('/send-push', async (request, response) => {
 		const subscriptions = await PushSubscription.find({})
 		for (let i = 0; i < subscriptions.length; i++) {
 					const subscription = subscriptions[i];
-					 await triggerPushMessages(subscription, dataToSend);
-					 
+					 await triggerPushMessages(subscription, dataToSend);	 
 				}
 
 		
