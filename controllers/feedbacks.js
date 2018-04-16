@@ -61,7 +61,7 @@ feedbackRouter.post('/:id/read', async (request, response) => {
         feedback.read = true
         const savedFeedback = await feedback.save()
 
-        return response.status(200).send(savedFeedback)
+        return response.status(200).send(Feedback.format(savedFeedback))
 
     } catch (error) {
         console.log(error)

@@ -4,6 +4,10 @@ const tmcAuth = require('../utils/tmcAuth')
 const tokenParser = require('../utils/tokenParser')
 const subsRouter = require('express').Router()
 const PushSubscription = require('../models/push_sub')
+const webpush = require('web-push')
+const config = require('../../utils/config') // is needed?
+
+require('dotenv').config()
 
 subsRouter.post('/save', async (request, response) => {
 	try {
@@ -22,6 +26,21 @@ subsRouter.post('/save', async (request, response) => {
 		})
 
 		await subscription.save()
+
+		response.status(200).end()	
+	} catch (error) {
+		console.log(error)
+		response.status(400).send({ error: 'something went wrong'})
+	}
+})
+
+subsRouter.post('/send-push', async (request, response) => {
+	try {
+		// you need to have the keys in your personal .env file
+		const vapidKeys = {
+			publicKey: '',
+			privateKey: ''
+		  }	
 
 		response.status(200).end()	
 	} catch (error) {
