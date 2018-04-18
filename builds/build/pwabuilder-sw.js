@@ -39,7 +39,7 @@ self.addEventListener('push', function (event) {
   const options = {
     body: event.data.text(),
     icon: 'apple-icon.png',
-    badge: 'apple-icon.png'
+    badge: 'android-icon-36x36.png'
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
