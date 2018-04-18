@@ -204,7 +204,7 @@ questsRouter.post('/:id/start', async (request, response) => {
 		let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 		const dateNow = Date.now()
 
-		let startedQuest = await Quest.findById(request.params.id)
+		let startedQuest = await Quest.findById(request.params.id).populate('course', {name: 1})
 
 		if (startedQuest.deactivated === true) {
 			return response.status(400).send({ error: 'This quest is deactivated' })
@@ -326,7 +326,9 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		await finishedQuest.save()
 		await questCourse.save()
 
-		response.status(200).send(Quest.formatNonAdmin(finishedQuest))
+		let populatedQuest = await Quest.findById(finishedQuest._id)
+			.populate('course', {name: 1})
+		response.status(200).send(Quest.formatNonAdmin(populatedQuest))
 	} catch (error) {
 		console.log(error)
 		response.status(400).send({ error: 'Oooooops... something went wrong. :(' })
