@@ -46,6 +46,7 @@ questsRouter.get('/', async (request, response) => {
 
 questsRouter.get('/:id', async (request, response) => {
 	//Does not require logged in user
+	
 	try {
 		const quest = await Quest.findById(request.params.id).populate('usersStarted', { username: 1 }).populate('course', { name: 1 })
 
@@ -87,12 +88,15 @@ questsRouter.post('/', async (request, response) => {
 
 		let questCourse = await Course.findById(body.course)
 
-		const savedQuest = await quest.save()
+		let savedQuest = await quest.save()
+
+		let questToReturn = await Quest.findById(savedQuest._id)
+			.populate('course', {name: 1})
 
 		questCourse.quests = questCourse.quests.concat(savedQuest._id)
 		await questCourse.save()
 
-		response.status(200).send(Quest.format(savedQuest))
+		response.status(200).send(Quest.format(questToReturn))
 
 	} catch (error) {
 		console.log(error)
@@ -307,7 +311,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		//Mark points to course here
 		let questCourse = await Course.findById(finishedQuest.course)
 		if (!questCourse) {
-			return response.status(500).send({ error: 'This quest does not have a course'})
+			return response.status(500).send({ error: 'This quest does not have a course' })
 		}
 
 		let courseUsers = questCourse.users.filter(userItem => userItem.user.toString() === user.id.toString())
