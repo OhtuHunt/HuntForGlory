@@ -46,7 +46,7 @@ questsRouter.get('/', async (request, response) => {
 
 questsRouter.get('/:id', async (request, response) => {
 	//Does not require logged in user
-	
+
 	try {
 		const quest = await Quest.findById(request.params.id).populate('usersStarted', { username: 1 }).populate('course', { name: 1 })
 
@@ -91,7 +91,7 @@ questsRouter.post('/', async (request, response) => {
 		let savedQuest = await quest.save()
 
 		let questToReturn = await Quest.findById(savedQuest._id)
-			.populate('course', {name: 1})
+			.populate('course', { name: 1 })
 
 		questCourse.quests = questCourse.quests.concat(savedQuest._id)
 		await questCourse.save()
@@ -123,6 +123,7 @@ questsRouter.put('/:id', async (request, response) => {
 		}
 
 		const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
+			.populate('course', { name: 1 })
 		response.status(200).send(Quest.format(updatedQuest))
 
 	} catch (error) {
@@ -154,6 +155,7 @@ questsRouter.post('/:id/deactivated', async (request, response) => {
 		}
 
 		const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
+			.populate('course', { name: 1 })
 
 		response.status(200).send(Quest.format(updatedQuest))
 
@@ -204,7 +206,7 @@ questsRouter.post('/:id/start', async (request, response) => {
 		let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 		const dateNow = Date.now()
 
-		let startedQuest = await Quest.findById(request.params.id).populate('course', {name: 1})
+		let startedQuest = await Quest.findById(request.params.id).populate('course', { name: 1 })
 
 		if (startedQuest.deactivated === true) {
 			return response.status(400).send({ error: 'This quest is deactivated' })
@@ -327,7 +329,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		await questCourse.save()
 
 		let populatedQuest = await Quest.findById(finishedQuest._id)
-			.populate('course', {name: 1})
+			.populate('course', { name: 1 })
 		response.status(200).send(Quest.formatNonAdmin(populatedQuest))
 	} catch (error) {
 		console.log(error)
