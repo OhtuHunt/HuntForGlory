@@ -38,8 +38,8 @@ self.addEventListener('push', function (event) {
   const title = 'Hunt for notifications';
   const options = {
     body: event.data.text(),
-    icon: 'apple-icon.png',
-    badge: 'android-icon-36x36.png'
+    icon: './static/img/icons/apple-icon.png',
+    badge: './static/img/icons/android-icon-72x72.png'
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
