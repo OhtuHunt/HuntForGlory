@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
             startTime: Date,
             finishTime: Date
 		}],
-	courses: [{course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }}]
+	courses: [{course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }}],
+	subscriptions: [{pushSub: { type: mongoose.Schema.Types.ObjectId, ref: 'PushSubscription' }}]
 })
 
 userSchema.statics.format = (user) => {

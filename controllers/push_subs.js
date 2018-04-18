@@ -4,6 +4,7 @@ const tmcAuth = require('../utils/tmcAuth')
 const tokenParser = require('../utils/tokenParser')
 const subsRouter = require('express').Router()
 const PushSubscription = require('../models/push_sub')
+const Course = require('../models/course')
 const webpush = require('web-push')
 const config = require('../utils/config') // is needed?
 
@@ -28,7 +29,7 @@ subsRouter.post('/save', async (request, response) => {
 			return response.status(500).send({ error: 'Subscription must have an endpoint' })
 		}
 
-		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
+		let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 		if (!user) {
 			return response.status(400).send({ error: 'You have to be logged in' })
 		}
@@ -38,7 +39,11 @@ subsRouter.post('/save', async (request, response) => {
 			subscription: request.body
 		})
 
+		// Add subscription to user
+		user.subscriptions = user.subscriptions.concat({ pushSub: subscription })
+
 		await subscription.save()
+		await user.save()
 
 		response.status(200).end()
 	} catch (error) {
@@ -53,8 +58,12 @@ const triggerPushMessages = (subscription, dataToSend) => {
 		webpush.sendNotification(subscription, dataToSend)
 
 	} catch (error) {
-		console.log(error)
-		response.status(400).send({ error: 'something went wrong' })
+		if (error.statusCode === 410) {
+			return deleteSubscriptionFromDatabase(subscription._id);
+		} else {
+			console.log(error)
+			response.status(400).send({ error: 'something went wrong' })
+		}
 	}
 }
 
@@ -81,13 +90,26 @@ subsRouter.post('/send-push', async (request, response) => {
 		}
 
 		webpush.setVapidDetails(
-			'mailto:https://huntforglory.herokuapp.com/#/', // remember to config this email
+			//This one to .env
+			'mailto:https://huntforglory.herokuapp.com/#/', //something about config, but .env?
 			vapidKeys.publicKey,
 			vapidKeys.privateKey
 		)
 
 		// need to check which course, other validations?
-		const subscriptions = await PushSubscription.find({})
+		// Send course id in POST body
+		const course = await Course.findById(request.body.course)
+			//.populate('users.user', { username: 1 })
+			.populate({
+				path : 'users.user', 
+				populate : {
+					path : 'subscriptions.pushSub',
+					}
+				}
+			)
+
+		/*const subscriptions = await PushSubscription.find({})
+
 		for (let i = 0; i < subscriptions.length; i++) {
 					const subscription = subscriptions[i];
 					 await triggerPushMessages(subscription, dataToSend);	 
@@ -112,7 +134,7 @@ subsRouter.post('/send-push', async (request, response) => {
 				return promiseChain;
 			})*/
 
-		response.status(200).end()
+		response.status(200).send(course)
 	} catch (error) {
 		console.log(error)
 		response.status(400).send({ error: 'something went wrong' })
