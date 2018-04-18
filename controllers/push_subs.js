@@ -54,9 +54,9 @@ subsRouter.post('/save', async (request, response) => {
 })
 
 // check the error handling
-const triggerPushMessages = (subscription, dataToSend) => {
+const triggerPushMessages = async (subscription, dataToSend) => {
 	try {
-		webpush.sendNotification(subscription, dataToSend)
+		await webpush.sendNotification(subscription, dataToSend)
 
 	} catch (error) {
 		if (error.statusCode === 410) {
