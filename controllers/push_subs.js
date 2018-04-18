@@ -8,8 +8,36 @@ const Course = require('../models/course')
 const AppUser = require('../models/app_user')
 const webpush = require('web-push')
 const config = require('../utils/config') // is needed?
-
 require('dotenv').config()
+
+// check the error handling
+const triggerPushMessages = async (subscription, dataToSend) => {
+	try {
+		await webpush.sendNotification(subscription, dataToSend)
+
+	} catch (error) {
+		if (error.statusCode === 410) {
+			return await deleteSubscriptionFromDatabase(subscription._id)
+		} else {
+			console.log(error)
+			response.status(400).send({ error: 'something went wrong' })
+		}
+	}
+}
+
+const deleteSubscriptionFromDatabase = async (subId) => {
+	try {
+		const removedPushSub = PushSubscription.findOneAndRemove({ 'subscription._id': subId })
+		const userId = removedPushSub.user
+		let user = AppUser.findById(userId)
+
+		const userSubs = user.subscriptions.filter(s => s.pushSub.toString() !== removedPushSub._id.toString())
+		user.subscriptions = userSubs
+		await user.save()
+	} catch (error) {
+		console.log(error)
+	}
+}
 
 subsRouter.delete('/delete', async (request, response) => {
 	try {
@@ -53,31 +81,6 @@ subsRouter.post('/save', async (request, response) => {
 	}
 })
 
-// check the error handling
-const triggerPushMessages = async (subscription, dataToSend) => {
-	try {
-		await webpush.sendNotification(subscription, dataToSend)
-
-	} catch (error) {
-		if (error.statusCode === 410) {
-			return await deleteSubscriptionFromDatabase(subscription._id)
-		} else {
-			console.log(error)
-			response.status(400).send({ error: 'something went wrong' })
-		}
-	}
-}
-
-const deleteSubscriptionFromDatabase = async (subId) => {
-	const removedPushSub = PushSubscription.findOneAndRemove({ 'subscription._id': subId })
-	const userId = pushSub.user
-	let user = AppUser.findById(userId)
-
-	const userSubs = user.subscriptions.filter(s => s.pushSub.toString() !== removedPushSub._id.toString())
-	user.subscriptions = userSubs
-	await user.save()
-}
-
 // ADD REMOVE FOR SUBS!!!!
 subsRouter.post('/send-push', async (request, response) => {
 	/* Sends push notifications to users in a course that have a subscription
@@ -114,7 +117,7 @@ subsRouter.post('/send-push', async (request, response) => {
 			})
 
 		if (!course) {
-			return response.status(404).send({ error: 'course not found'})
+			return response.status(404).send({ error: 'course not found' })
 		}
 
 		const courseUsers = course.users
@@ -123,9 +126,9 @@ subsRouter.post('/send-push', async (request, response) => {
 		const subscriptions = subsObjs.map(s => s.pushSub.subscription)
 
 		if (typeof subscriptions === 'undefined' && subscriptions.length === 0) {
-			return response.status(500).send({ error: 'there are no subscriptions for this course'})
+			return response.status(500).send({ error: 'there are no subscriptions for this course' })
 		}
-		
+
 		await Promise.all(subscriptions.map(async subscription => {
 			await triggerPushMessages(subscription, dataToSend)
 		}))
