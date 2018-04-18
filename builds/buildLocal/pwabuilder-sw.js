@@ -1,52 +1,56 @@
-//This is the "Offline copy of pages" wervice worker
-
-//Install stage sets up the index page (home page) in the cahche and opens a new cache
-self.addEventListener("install", function(event) {
-  var indexPage = new Request("index.html");
+// Install stage sets up the index page (home page) in the cahche and opens a new cache
+self.addEventListener('install', function (event) {
+  var indexPage = new Request('index.html');
   event.waitUntil(
-    fetch(indexPage).then(function(response) {
-      return caches.open("pwabuilder-offline").then(function(cache) {
-        console.log(
-          "[PWA Builder] Cached index page during Install" + response.url
-        );
+    fetch(indexPage).then(function (response) {
+      return caches.open('pwabuilder-offline').then(function (cache) {
+        console.log('[Service Worker] Cached index page during Install' + response.url);
         return cache.put(indexPage, response);
+      });
+    }));
+});
+
+// Return cached requests, if navigator is offline and request is found in cache.
+// Otherwise make a request to server and cache it.
+self.addEventListener('fetch', function (event) {
+  event.respondWith(
+    caches.match(event.request).then(function (resp) {
+      if(!navigator.onLine && resp) {
+        return resp;
+      }
+      return fetch(event.request).then(function (response) {
+        return caches.open('pwabuilder-offline').then(function (cache) {
+          if (event.request.method === "GET") {
+            cache.put(event.request, response.clone());
+          }
+          return response;
+        });
       });
     })
   );
 });
 
-//If any fetch fails, it will look for the request in the cache and serve it from there first
-self.addEventListener("fetch", function(event) {
-  var updateCache = function(request) {
-    return caches.open("pwabuilder-offline").then(function(cache) {
-      return fetch(request).then(function(response) {
-        console.log("[PWA Builder] add page to offline " + response.url);
-        return cache.put(request, response);
-      });
-    });
+// Listen for push notifications.
+self.addEventListener('push', function (event) {
+  console.log('[Service Worker] Push Received.');
+  console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
+
+  const title = 'Hunt for notifications';
+  const options = {
+    body: event.data.text(),
+    icon: 'apple-icon.png',
+    badge: 'apple-icon.png'
   };
 
-  event.waitUntil(updateCache(event.request));
+  event.waitUntil(self.registration.showNotification(title, options));
+});
 
-  event.respondWith(
-    fetch(event.request).catch(function(error) {
-      console.log(
-        "[PWA Builder] Network request Failed. Serving content from cache: " +
-          error
-      );
+self.addEventListener('notificationclick', function (event) {
+  console.log('[Service Worker] Notification click Received.');
 
-      //Check to see if you have it in the cache
-      //Return response
-      //If not in the cache, then return error page
-      return caches.open("pwabuilder-offline").then(function(cache) {
-        return cache.match(event.request).then(function(matching) {
-          var report =
-            !matching || matching.status == 404
-              ? Promise.reject("no-match")
-              : matching;
-          return report;
-        });
-      });
-    })
+  event.notification.close();
+
+  event.waitUntil(
+    clients.openWindow('https://huntforglory.herokuapp.com/')
   );
 });
