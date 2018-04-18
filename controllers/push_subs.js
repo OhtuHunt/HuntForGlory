@@ -17,10 +17,10 @@ const triggerPushMessages = async (subObj, dataToSend) => {
 
 	} catch (error) {
 		if (error.statusCode === 410) {
-			return await deleteSubscriptionFromDatabase(subObj.pushSub)
+			console.log('Handling 410')
+			await deleteSubscriptionFromDatabase(subObj.pushSub)
 		} else {
 			console.log(error)
-			response.status(400).send({ error: 'something went wrong' })
 		}
 	}
 }
@@ -28,14 +28,9 @@ const triggerPushMessages = async (subObj, dataToSend) => {
 const deleteSubscriptionFromDatabase = async (pushSub) => {
 	//Delete subscription from database and user
 	try {
-		const removedPushSub = await PushSubscription.findByIdAndRemove(pushSub._id)
+		await PushSubscription.findByIdAndRemove(pushSub._id)
 		const userId = pushSub.user
-		let user = await AppUser.findById(userId)
-		const userSubs = user.subscriptions.filter(s => s.pushSub.toString() !== pushSub._id.toString())
-		user.subscriptions = userSubs
-		// User version needs to be deleted because of known mongo error
-		delete user.__v
-		await user.save()
+		await AppUser.findByIdAndUpdate(userId, { $pull: { subscriptions : { pushSub: pushSub._id } } })
 	} catch (error) {
 		console.log(error)
 	}
@@ -125,12 +120,11 @@ subsRouter.post('/send-push', async (request, response) => {
 		const courseUsers = course.users
 		const subsArrays = courseUsers.map(u => u.user.subscriptions)
 		const subsObjs = [].concat.apply([], subsArrays)
-		/*const subscriptions = subsObjs.map(s => s.pushSub.subscription)
-
-		if (typeof subscriptions === 'undefined' && subscriptions.length === 0) {
+		
+		if (typeof subsObjs === 'undefined' || subsObjs.length === 0) {
 			return response.status(500).send({ error: 'there are no subscriptions for this course' })
 		}
-		*/
+		
 		await Promise.all(subsObjs.map(async subObj => {
 			await triggerPushMessages(subObj, dataToSend)
 		}))
