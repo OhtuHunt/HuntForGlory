@@ -5,6 +5,7 @@ const tokenParser = require('../utils/tokenParser')
 const subsRouter = require('express').Router()
 const PushSubscription = require('../models/push_sub')
 const Course = require('../models/course')
+const AppUser = require('../models/app_user')
 const webpush = require('web-push')
 const config = require('../utils/config') // is needed?
 
@@ -59,12 +60,22 @@ const triggerPushMessages = (subscription, dataToSend) => {
 
 	} catch (error) {
 		if (error.statusCode === 410) {
-			//return deleteSubscriptionFromDatabase(subscription._id);
+			return await deleteSubscriptionFromDatabase(subscription._id)
 		} else {
 			console.log(error)
 			response.status(400).send({ error: 'something went wrong' })
 		}
 	}
+}
+
+const deleteSubscriptionFromDatabase = async (subId) => {
+	const removedPushSub = PushSubscription.findOneAndRemove({ 'subscription._id': subId })
+	const userId = pushSub.user
+	let user = AppUser.findById(userId)
+
+	const userSubs = user.subscriptions.filter(s => s.pushSub.toString() !== removedPushSub._id.toString())
+	user.subscriptions = userSubs
+	await user.save()
 }
 
 // ADD REMOVE FOR SUBS!!!!
