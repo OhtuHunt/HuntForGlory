@@ -11,13 +11,13 @@ const config = require('../utils/config') // is needed?
 require('dotenv').config()
 
 // check the error handling
-const triggerPushMessages = async (subscription, dataToSend) => {
+const triggerPushMessages = async (subObj, dataToSend) => {
 	try {
-		await webpush.sendNotification(subscription, dataToSend)
+		await webpush.sendNotification(subObj.pushSub.subscription, dataToSend)
 
 	} catch (error) {
 		if (error.statusCode === 410) {
-			return await deleteSubscriptionFromDatabase(subscription._id)
+			return await deleteSubscriptionFromDatabase(subObj.pushSub)
 		} else {
 			console.log(error)
 			response.status(400).send({ error: 'something went wrong' })
@@ -25,14 +25,16 @@ const triggerPushMessages = async (subscription, dataToSend) => {
 	}
 }
 
-const deleteSubscriptionFromDatabase = async (subId) => {
+const deleteSubscriptionFromDatabase = async (pushSub) => {
+	//Delete subscription from database and user
 	try {
-		const removedPushSub = PushSubscription.findOneAndRemove({ 'subscription._id': subId })
-		const userId = removedPushSub.user
-		let user = AppUser.findById(userId)
-
-		const userSubs = user.subscriptions.filter(s => s.pushSub.toString() !== removedPushSub._id.toString())
+		const removedPushSub = await PushSubscription.findByIdAndRemove(pushSub._id)
+		const userId = pushSub.user
+		let user = await AppUser.findById(userId)
+		const userSubs = user.subscriptions.filter(s => s.pushSub.toString() !== pushSub._id.toString())
 		user.subscriptions = userSubs
+		// User version needs to be deleted because of known mongo error
+		delete user.__v
 		await user.save()
 	} catch (error) {
 		console.log(error)
@@ -123,14 +125,14 @@ subsRouter.post('/send-push', async (request, response) => {
 		const courseUsers = course.users
 		const subsArrays = courseUsers.map(u => u.user.subscriptions)
 		const subsObjs = [].concat.apply([], subsArrays)
-		const subscriptions = subsObjs.map(s => s.pushSub.subscription)
+		/*const subscriptions = subsObjs.map(s => s.pushSub.subscription)
 
 		if (typeof subscriptions === 'undefined' && subscriptions.length === 0) {
 			return response.status(500).send({ error: 'there are no subscriptions for this course' })
 		}
-
-		await Promise.all(subscriptions.map(async subscription => {
-			await triggerPushMessages(subscription, dataToSend)
+		*/
+		await Promise.all(subsObjs.map(async subObj => {
+			await triggerPushMessages(subObj, dataToSend)
 		}))
 
 		response.status(200).end()
