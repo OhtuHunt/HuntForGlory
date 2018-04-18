@@ -59,7 +59,7 @@ const triggerPushMessages = (subscription, dataToSend) => {
 
 	} catch (error) {
 		if (error.statusCode === 410) {
-			return deleteSubscriptionFromDatabase(subscription._id);
+			//return deleteSubscriptionFromDatabase(subscription._id);
 		} else {
 			console.log(error)
 			response.status(400).send({ error: 'something went wrong' })
@@ -67,23 +67,12 @@ const triggerPushMessages = (subscription, dataToSend) => {
 	}
 }
 
-/* Malli
-const triggerPushMsg = function (subscription, dataToSend) {
-	return webpush.sendNotification(subscription, dataToSend)
-		.catch((err) => {
-			if (err.statusCode === 410) {
-				return deleteSubscriptionFromDatabase(subscription._id);
-			} else {
-				console.log('Subscription is no longer valid: ', err);
-			}
-		});
-};*/
-
 // ADD REMOVE FOR SUBS!!!!
 subsRouter.post('/send-push', async (request, response) => {
 	try {
 		const dataToSend = request.body.dataToSend
 		// you need to have the keys in your personal .env file
+
 		const vapidKeys = {
 			publicKey: process.env.PUBLIC_PUSHKEY,
 			privateKey: process.env.PRIVATE_PUSHKEY
@@ -101,40 +90,28 @@ subsRouter.post('/send-push', async (request, response) => {
 		const course = await Course.findById(request.body.course)
 			//.populate('users.user', { username: 1 })
 			.populate({
-				path : 'users.user', 
-				populate : {
-					path : 'subscriptions.pushSub',
-					}
+				path: 'users.user',
+				populate: {
+					path: 'subscriptions.pushSub',
 				}
+			}
 			)
 
-		/*const subscriptions = await PushSubscription.find({})
+		const courseUsers = course.users
+		const subsArrays = courseUsers.map(u => u.user.subscriptions)
+		const subsObjs = [].concat.apply([], subsArrays)
+		const subscriptions = subsObjs.map(s => s.pushSub.subscription)
 
-		for (let i = 0; i < subscriptions.length; i++) {
-					const subscription = subscriptions[i];
-					 await triggerPushMessages(subscription, dataToSend);	 
-				}
+		/*for (let i = 0; i < subscriptions.length; i++) {
+			const subscription = subscriptions[i];
+			await triggerPushMessages(subscription, dataToSend);
+		}*/
 
-		
+		await Promise.all(subscriptions.map(async subscription => {
+			await triggerPushMessages(subscription, dataToSend)
+		}))
 
-		//items.forEach(({word, count}) => console.log(word+' '+count));
-
-		/* malli
-		return getSubscriptionsFromDatabase()
-			.then(function (subscriptions) {
-				let promiseChain = Promise.resolve();
-
-				for (let i = 0; i < subscriptions.length; i++) {
-					const subscription = subscriptions[i];
-					promiseChain = promiseChain.then(() => {
-						return triggerPushMsg(subscription, dataToSend);
-					});
-				}
-
-				return promiseChain;
-			})*/
-
-		response.status(200).send(course)
+		response.status(200).end()
 	} catch (error) {
 		console.log(error)
 		response.status(400).send({ error: 'something went wrong' })
