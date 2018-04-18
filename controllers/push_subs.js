@@ -30,7 +30,8 @@ const deleteSubscriptionFromDatabase = async (pushSub) => {
 	try {
 		await PushSubscription.findByIdAndRemove(pushSub._id)
 		const userId = pushSub.user
-		await AppUser.findByIdAndUpdate(userId, { $pull: { subscriptions : { pushSub: pushSub._id } } })
+		await AppUser.findByIdAndUpdate(userId, 
+			{ $pull: { subscriptions : { pushSub: pushSub._id } } }, { new: true })
 	} catch (error) {
 		console.log(error)
 	}
@@ -65,12 +66,9 @@ subsRouter.post('/save', async (request, response) => {
 			subscription: request.body
 		})
 
-		// Add subscription to user
-		user.subscriptions = user.subscriptions.concat({ pushSub: subscription })
-
 		await subscription.save()
-		await user.save()
-
+		await AppUser.findByIdAndUpdate(user._id, 
+			{ $push: { subscriptions: { pushSub: subscription }}}, { new: true })
 		response.status(200).end()
 	} catch (error) {
 		console.log(error)
