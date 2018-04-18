@@ -26,6 +26,7 @@ coursesRouter.get('/', async (request, response) => {
 	// TODO refactor to populate when joined
 	try {
 		const courses = await Course.find({})
+			.populate('users.user', { username: 1 })
 		return response.status(200).send(courses.map(Course.format))
 
 	} catch (error) {
@@ -83,7 +84,7 @@ coursesRouter.post('/:id/join', async (request, response) => {
 		}
 
 		//Add user to course
-		joinedCourse.users = joinedCourse.users.concat([{ user: user.id }])
+		joinedCourse.users = joinedCourse.users.concat([{ user: user.id, points: 0 }])
 
 		//Add course to user
 		user.courses = user.courses.concat([{ course: joinedCourse._id }])

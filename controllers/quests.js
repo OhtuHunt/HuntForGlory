@@ -24,7 +24,6 @@ questsRouter.get('/', async (request, response) => {
 
 		if (user.admin === true) {
 			let quests = await Quest.find({})
-				.populate('usersStarted', { username: 1 })
 				.populate('course', { name: 1 })
 			return response.status(200).send(quests.map(Quest.format))
 		} else {
@@ -33,7 +32,6 @@ questsRouter.get('/', async (request, response) => {
 
 			await Promise.all(courses.map(async course => {
 				let questHelp = await Quest.find({ course: course })
-					.populate('usersStarted', { username: 1 })
 					.populate('course', { name: 1 })
 				quests = quests.concat(questHelp)
 			}))
@@ -48,6 +46,7 @@ questsRouter.get('/', async (request, response) => {
 
 questsRouter.get('/:id', async (request, response) => {
 	//Does not require logged in user
+
 	try {
 		const quest = await Quest.findById(request.params.id).populate('usersStarted', { username: 1 }).populate('course', { name: 1 })
 
@@ -89,12 +88,15 @@ questsRouter.post('/', async (request, response) => {
 
 		let questCourse = await Course.findById(body.course)
 
-		const savedQuest = await quest.save()
+		let savedQuest = await quest.save()
+
+		let questToReturn = await Quest.findById(savedQuest._id)
+			.populate('course', { name: 1 })
 
 		questCourse.quests = questCourse.quests.concat(savedQuest._id)
 		await questCourse.save()
 
-		response.status(200).send(Quest.format(savedQuest))
+		response.status(200).send(Quest.format(questToReturn))
 
 	} catch (error) {
 		console.log(error)
@@ -121,6 +123,7 @@ questsRouter.put('/:id', async (request, response) => {
 		}
 
 		const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
+			.populate('course', { name: 1 })
 		response.status(200).send(Quest.format(updatedQuest))
 
 	} catch (error) {
@@ -152,6 +155,7 @@ questsRouter.post('/:id/deactivated', async (request, response) => {
 		}
 
 		const updatedQuest = await Quest.findByIdAndUpdate(request.params.id, quest, { new: true })
+			.populate('course', { name: 1 })
 
 		response.status(200).send(Quest.format(updatedQuest))
 
@@ -202,7 +206,7 @@ questsRouter.post('/:id/start', async (request, response) => {
 		let user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 		const dateNow = Date.now()
 
-		let startedQuest = await Quest.findById(request.params.id)
+		let startedQuest = await Quest.findById(request.params.id).populate('course', { name: 1 })
 
 		if (startedQuest.deactivated === true) {
 			return response.status(400).send({ error: 'This quest is deactivated' })
@@ -285,6 +289,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
 			return response.status(400).send({ error: 'User has already finished this quest' })
 		}
 
+		//Mark finish time to user
 		finishedQuestItem.finishTime = dateNow
 
 		user.quests = user.quests.filter(questItem => questItem.quest.toString() !== request.params.id.toString())
@@ -297,6 +302,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		//Add points to user here
 		user.points = user.points + finishedQuest.points
 
+		//Mark finish time to quest
 		let usersCompleted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() === user.id.toString())
 		let userCompletedItem = usersCompleted[0]
 		userCompletedItem.finishTime = dateNow
@@ -304,11 +310,27 @@ questsRouter.post('/:id/finish', async (request, response) => {
 		finishedQuest.usersStarted = finishedQuest.usersStarted.filter(userItem => userItem.user.toString() !== user.id.toString())
 		finishedQuest.usersStarted = finishedQuest.usersStarted.concat(userCompletedItem)
 
+		//Mark points to course here
+		let questCourse = await Course.findById(finishedQuest.course)
+		if (!questCourse) {
+			return response.status(500).send({ error: 'This quest does not have a course' })
+		}
+
+		let courseUsers = questCourse.users.filter(userItem => userItem.user.toString() === user.id.toString())
+		let userCourseItem = courseUsers[0]
+		userCourseItem.points = userCourseItem.points + finishedQuest.points
+
+		questCourse.users = questCourse.users.filter(userItem => userItem.user.toString() !== user.id.toString())
+		questCourse.users = questCourse.users.concat(userCourseItem)
+
 		//Finally save to database and send response
 		await user.save()
 		await finishedQuest.save()
+		await questCourse.save()
 
-		response.status(200).send(Quest.formatNonAdmin(finishedQuest))
+		let populatedQuest = await Quest.findById(finishedQuest._id)
+			.populate('course', { name: 1 })
+		response.status(200).send(Quest.formatNonAdmin(populatedQuest))
 	} catch (error) {
 		console.log(error)
 		response.status(400).send({ error: 'Oooooops... something went wrong. :(' })

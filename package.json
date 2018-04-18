@@ -22,7 +22,8 @@
     "react-simple-card": "^1.0.11",
     "react-switch-card-module": "^1.0.2",
     "supertest": "^3.0.0",
-    "tmc-client-js": "0.0.7"
+    "tmc-client-js": "0.0.7",
+    "web-push": "^3.3.0"
   },
   "scripts": {
     "start": "node ./src/server/server.js",

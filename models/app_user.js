@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
             startTime: Date,
             finishTime: Date
 		}],
-	courses: [{course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }}]
+	courses: [{course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }}],
+	subscriptions: [{pushSub: { type: mongoose.Schema.Types.ObjectId, ref: 'PushSubscription' }}]
 })
 
 userSchema.statics.format = (user) => {
@@ -36,6 +37,12 @@ userSchema.statics.formatNonAdmin = (user) => {
         admin: user.admin,
 		quests: user.quests,
 		courses: user.courses
+    }
+}
+
+userSchema.statics.formatOnlyId = (user) => {
+    return {
+        id: user.id,
     }
 }
 
