@@ -35,11 +35,10 @@ self.addEventListener('push', function (event) {
   console.log('[Service Worker] Push Received.');
   console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
 
-  const title = 'Hunt for notifications';
+  const title = 'Hunt for Glory';
   const options = {
     body: event.data.text(),
-    icon: './static/img/icons/apple-icon.png',
-    badge: './static/img/icons/android-icon-72x72.png'
+    icon: './static/img/icons/apple-icon.png'
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
