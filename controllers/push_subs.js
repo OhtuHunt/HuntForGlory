@@ -69,18 +69,25 @@ const triggerPushMessages = (subscription, dataToSend) => {
 
 // ADD REMOVE FOR SUBS!!!!
 subsRouter.post('/send-push', async (request, response) => {
+	/* Sends push notifications to users in a course that have a subscription
+	 * Requires admin token; course id and notification message in body
+	 * vapidKeys in .env **/
 	try {
-		const dataToSend = request.body.dataToSend
-		// you need to have the keys in your personal .env file
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'Admin priviledges needed' })
+		}
 
+		const dataToSend = request.body.dataToSend
+
+		// you need to have the keys in your personal .env file
 		const vapidKeys = {
 			publicKey: process.env.PUBLIC_PUSHKEY,
 			privateKey: process.env.PRIVATE_PUSHKEY
 		}
 
 		webpush.setVapidDetails(
-			//This one to .env
-			'mailto:https://huntforglory.herokuapp.com/#/', //something about config, but .env?
+			//This one to .env?
+			'mailto:https://huntforglory.herokuapp.com/#/',
 			vapidKeys.publicKey,
 			vapidKeys.privateKey
 		)
@@ -88,25 +95,26 @@ subsRouter.post('/send-push', async (request, response) => {
 		// need to check which course, other validations?
 		// Send course id in POST body
 		const course = await Course.findById(request.body.course)
-			//.populate('users.user', { username: 1 })
 			.populate({
 				path: 'users.user',
 				populate: {
 					path: 'subscriptions.pushSub',
 				}
-			}
-			)
+			})
+
+		if (!course) {
+			return response.status(404).send({ error: 'course not found'})
+		}
 
 		const courseUsers = course.users
 		const subsArrays = courseUsers.map(u => u.user.subscriptions)
 		const subsObjs = [].concat.apply([], subsArrays)
 		const subscriptions = subsObjs.map(s => s.pushSub.subscription)
 
-		/*for (let i = 0; i < subscriptions.length; i++) {
-			const subscription = subscriptions[i];
-			await triggerPushMessages(subscription, dataToSend);
-		}*/
-
+		if (typeof subscriptions === 'undefined' && subscriptions.length === 0) {
+			return response.status(500).send({ error: 'there are no subscriptions for this course'})
+		}
+		
 		await Promise.all(subscriptions.map(async subscription => {
 			await triggerPushMessages(subscription, dataToSend)
 		}))
