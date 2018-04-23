@@ -2,6 +2,7 @@ const coursesRouter = require('express').Router()
 const Course = require('../models/course')
 const Quest = require('../models/quest')
 const AppUser = require('../models/app_user')
+const Group = require('../models/group')
 const axios = require('axios')
 const adminCheck = require('../utils/adminCheck')
 const tmcAuth = require('../utils/tmcAuth')
@@ -132,5 +133,26 @@ coursesRouter.delete('/:id', async (request, response) => {
 		response.status(400).send({ error: 'malformatted id' })
 	}
 })
+
+coursesRouter.get('/:id/users_without_group', async (request, response) => {
+    try {
+		const course = await Course.findById(request.params.id)
+		const groups = await Group.find({ "course": request.params.id })
+
+		const usersInCourse = course.users.map(u => u.user.toString())
+		const groupUserArrs = groups.map(g => g.users)
+		let usersInGroups = [].concat.apply([], groupUserArrs)
+		usersInGroups = usersInGroups.map(u => u.user.toString())
+
+		let userWithoutGroup = usersInCourse.filter(user => usersInGroups.indexOf(user) === -1)
+
+		return response.status(200).send(userWithoutGroup)
+
+    } catch (error) {
+        console.log(error)
+        return response.status(400).send({ error: 'Something went wrong...' })
+    }
+})
+
 
 module.exports = coursesRouter

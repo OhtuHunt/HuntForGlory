@@ -50,28 +50,6 @@ groupRouter.post('/', async (request, response) => {
     }
 })
 
-// THIS IS ONLY FOR TESTING GROUP DIVISION TEMPORARILY
-groupRouter.get('/abc', async (request, response) => {
-    try {
-
-        const courseUsers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        const body = request.body
-        const groupAmount = 3
-
-        //const course = await Course.findById(body.course)
-        //const courseUsers = course.users.map(u => u.user)
-
-        const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
-
-        return response.status(200).send({ gruops: listOfGroups })
-
-    } catch (error) {
-        console.log(error)
-        return response.status(400).send({ error: 'Something went wrong...' })
-    }
-})
-
-
 groupRouter.put('/:id', async (request, response) => {
 //Requires course id and list of user ids in users: [ {user: id}, {user: id} ] format
     try {
@@ -126,7 +104,7 @@ groupRouter.post('/move_user', async (request, response) => {
 	})
 
 groupRouter.delete('/:id', async (request, response) => {
-
+/** Mainly good if group is emptied from users (they are moved to another group) */
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'You must be an admin to do this' })
