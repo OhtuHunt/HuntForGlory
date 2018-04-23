@@ -89,10 +89,12 @@ groupRouter.post('/course/:id/generate', async (request, response) => {
 		}))
 
 		// Frontend needs the list of groups
-		const groupsToReturn = await Group
+		const groups = await Group
 						.find({ "course": request.params.id })
 						.populate('users.user', { username: 1 })
 
+		const groupsToReturn = groups.map(group => Group.format(group))
+		
 		return response.status(200).send(groupsToReturn)
 
 	} catch (error) {
