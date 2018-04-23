@@ -46,6 +46,7 @@ groupRouter.put('/:id', async (request, response) => {
 		const body = request.body
 
 		const group = {
+			groupName: body.groupName,
 			course: body.course,
 			users: body.users
 		}
@@ -76,10 +77,13 @@ groupRouter.post('/course/:id/generate', async (request, response) => {
 		const courseUsers = course.users.map(u => u.user)
 		const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
 
+		let groupNumber = 0
 		await Promise.all(listOfGroups.map(async (group) => {
+			groupNumber = groupNumber + 1
 			const groupObject = new Group({
 				course: request.params.id,
-				users: group
+				users: group,
+				groupName: `Group ${groupNumber}`
 			})
 			await groupObject.save()
 		}))
