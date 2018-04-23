@@ -11,139 +11,153 @@ const divideIntoGroups = require('../utils/divideIntoGroups')
 
 
 groupRouter.get('/', async (request, response) => {
+	try {
+		const groups = await Group.find({})
+			.populate('users.user', { username: 1 })
+		return response.status(200).send(groups.map(Group.format))
+
+	} catch (error) {
+		console.log(error)
+		return response.status(400).send({ error: 'Something went wrong...' })
+	}
+})
+
+groupRouter.get('/course/:id', async (request, response) => {
     try {
-        const groups = await Group.find({})
-        return response.status(200).send(groups.map(Group.format))
+		const groups = await Group
+						.find({ "course": request.params.id })
+						.populate('users.user', { username: 1 })
+
+		return response.status(200).send(groups)
 
     } catch (error) {
         console.log(error)
         return response.status(400).send({ error: 'Something went wrong...' })
     }
 })
-
-groupRouter.post('/', async (request, response) => {
-    try {
-        if (await adminCheck.check(request) === false) {
-            return response.status(400).send({ error: 'You must be an admin to do this' })
-        }
-
-        const body = request.body
-
-        const groupAmount = body.groupAmount
-        const course = await Course.findById(body.course)
-
-        const courseUsers = course.users.map(u => u.user)
-        const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
-
-        await Promise.all(listOfGroups.map(async (group) => {
-            const groupObject = new Group({
-                course: body.course,
-                users: group
-            })
-            await groupObject.save()
-        }))
-        return response.status(200).end()
-
-    } catch (error) {
-        console.log(error)
-        return response.status(400).send({ error: 'Something went wrong...' })
-    }
-})
-
-// THIS IS ONLY FOR TESTING GROUP DIVISION TEMPORARILY
-groupRouter.get('/abc', async (request, response) => {
-    try {
-
-        const courseUsers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        const body = request.body
-        const groupAmount = 3
-
-        //const course = await Course.findById(body.course)
-        //const courseUsers = course.users.map(u => u.user)
-
-        const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
-
-        return response.status(200).send({ gruops: listOfGroups })
-
-    } catch (error) {
-        console.log(error)
-        return response.status(400).send({ error: 'Something went wrong...' })
-    }
-})
-
 
 groupRouter.put('/:id', async (request, response) => {
-//Requires course id and list of user ids in users: [ {user: id}, {user: id} ] format
-    try {
-        if (await adminCheck.check(request) === false) {
-            return response.status(400).send({ error: 'You must be an admin to do this' })
-        }
+	//Requires course id and list of user ids in users: [ {user: id}, {user: id} ] format
+	try {
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'You must be an admin to do this' })
+		}
 
-        const body = request.body
+		const body = request.body
 
-        const group = {
-            course: body.course,
-            users: body.users
-        }
+		const group = {
+			groupName: body.groupName,
+			course: body.course,
+			users: body.users
+		}
 
-        const updatedGroup = await Group.findByIdAndUpdate(request.params.id, group, { new: true })
-        response.status(200).send(Group.format(updatedGroup))
+		const updatedGroup = await Group.findByIdAndUpdate(request.params.id, group, { new: true })
+		response.status(200).send(Group.format(updatedGroup))
 
-    } catch (error) {
-        console.log(error)
-        return response.status(400).send({ error: 'Something went wrong...' })
-    }
+	} catch (error) {
+		console.log(error)
+		return response.status(400).send({ error: 'Something went wrong...' })
+	}
 })
 
-groupRouter.post('/move_user', async (request, response) => {
-	//Requires three ids: Group where user is moved from, group where user is moved to, and user id
-		try {
-			if (await adminCheck.check(request) === false) {
-				return response.status(400).send({ error: 'You must be an admin to do this' })
-			}
-	
-			const body = request.body
-
-			let groupFrom = await Group.findById(body.groupFromId)
-			let groupTo = await Group.findById(body.groupToId)
-			const userId = body.userId
-	
-			//Remove user from groupFrom
-			groupFromUsersAfter = groupFrom.users.filter(userItem => userItem.user.toString() !== userId.toString())
-			groupFrom.users = groupFromUsersAfter
-			await groupFrom.save()
-
-			//Add user to groupTo
-			groupToUsersAfter = groupTo.users.concat({ user: userId })
-			groupTo.users = groupToUsersAfter
-			await groupTo.save()
-
-			response.status(200).send(Group.format(groupTo))
-		} catch (error) {
-			console.log(error)
-			return response.status(400).send({ error: 'Something went wrong...' })
+groupRouter.post('/course/:id/generate', async (request, response) => {
+	/** Randomly adds users in a course to predefined amount of groups
+	 * 	Requires amount of groups as groupAmount in body */
+	try {
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'You must be an admin to do this' })
 		}
-	})
+
+		const groupAmount = request.body.groupAmount
+		const course = await Course.findById(request.params.id)
+
+		// Remove all previous groups
+		await Group.deleteMany({ "course": request.params.id })
+
+		const courseUsers = course.users.map(u => u.user)
+		const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
+
+		let groupNumber = 0
+		await Promise.all(listOfGroups.map(async (group) => {
+			groupNumber = groupNumber + 1
+			const groupObject = new Group({
+				course: request.params.id,
+				users: group,
+				groupName: `Group ${groupNumber}`
+			})
+			await groupObject.save()
+		}))
+
+		// Frontend needs the list of groups
+		const groupsToReturn = await Group
+						.find({ "course": request.params.id })
+						.populate('users.user', { username: 1 })
+
+		return response.status(200).send(groupsToReturn.map(Group.format))
+
+	} catch (error) {
+		console.log(error)
+		return response.status(400).send({ error: 'Something went wrong...' })
+	}
+})
+
+groupRouter.post('/move-user', async (request, response) => {
+	//Requires three ids: Group where user is moved from, group where user is moved to, and user id
+	try {
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'You must be an admin to do this' })
+		}
+
+		const body = request.body
+
+		const userId = body.user
+
+		//Remove user from groupFrom
+		await Group.findByIdAndUpdate(body.groupFrom, 
+			{ $pull: { users : { user: userId } } }, { new: true })
+
+		/*		let groupFrom = await Group.findById(body.groupFromId)
+		groupFromUsersAfter = groupFrom.users.filter(userItem => userItem.user.toString() !== userId.toString())
+		groupFrom.users = groupFromUsersAfter
+		await groupFrom.save() */
+
+		//Add user to groupTo
+		await Group.findByIdAndUpdate(body.groupTo, 
+			{ $push: { users: { user: userId }}}, { new: true })
+
+		/*		let groupTo = await Group.findById(body.groupToId)
+		groupToUsersAfter = groupTo.users.concat({ user: userId })
+		groupTo.users = groupToUsersAfter
+		await groupTo.save() */
+
+		const allGroups = await Group.find({}).populate('users.user', { username: 1 })
+
+		response.status(200).send(allGroups.map(Group.format))
+	} catch (error) {
+		console.log(error)
+		return response.status(400).send({ error: 'Something went wrong...' })
+	}
+})
 
 groupRouter.delete('/:id', async (request, response) => {
+	/** Mainly good if group is emptied from users (they are moved to another group) */
+	try {
+		if (await adminCheck.check(request) === false) {
+			return response.status(400).send({ error: 'You must be an admin to do this' })
+		}
 
-    try {
-        if (await adminCheck.check(request) === false) {
-            return response.status(400).send({ error: 'You must be an admin to do this' })
-        }
+		let groupToDelete = await Group.findByIdAndRemove(request.params.id)
 
-        let groupToDelete = await Group.findByIdAndRemove(request.params.id)
+		if (!groupToDelete) {
+			return response.status(404).end()
+		}
 
-        if (!groupToDelete) {
-            return response.status(404).end()
-        }
+		return response.status(200).end()
 
-        return response.status(200).end()
-
-    } catch (error) {
-        console.log(error)
-        return response.status(400).send({ error: 'Something went wrong...' })
-    }
+	} catch (error) {
+		console.log(error)
+		return response.status(400).send({ error: 'Something went wrong...' })
+	}
 })
 
 module.exports = groupRouter
