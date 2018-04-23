@@ -110,21 +110,29 @@ groupRouter.post('/move-user', async (request, response) => {
 
 		const body = request.body
 
-		let groupFrom = await Group.findById(body.groupFromId)
-		let groupTo = await Group.findById(body.groupToId)
-		const userId = body.userId
+		const userId = body.user
 
 		//Remove user from groupFrom
+		await Group.findByIdAndUpdate(body.groupFrom, 
+			{ $pull: { users : { user: userId } } }, { new: true })
+
+		/*		let groupFrom = await Group.findById(body.groupFromId)
 		groupFromUsersAfter = groupFrom.users.filter(userItem => userItem.user.toString() !== userId.toString())
 		groupFrom.users = groupFromUsersAfter
-		await groupFrom.save()
+		await groupFrom.save() */
 
 		//Add user to groupTo
+		await Group.findByIdAndUpdate(body.groupTo, 
+			{ $push: { users: { user: userId }}}, { new: true })
+
+		/*		let groupTo = await Group.findById(body.groupToId)
 		groupToUsersAfter = groupTo.users.concat({ user: userId })
 		groupTo.users = groupToUsersAfter
-		await groupTo.save()
+		await groupTo.save() */
 
-		response.status(200).send(Group.format(groupTo))
+		const allGroups = await Group.find({}).populate('users.user', { username: 1 })
+
+		response.status(200).send(allGroups.map(Group.format))
 	} catch (error) {
 		console.log(error)
 		return response.status(400).send({ error: 'Something went wrong...' })
