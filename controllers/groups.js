@@ -21,7 +21,7 @@ groupRouter.get('/', async (request, response) => {
     }
 })
 
-groupRouter.post('/', async (request, response) => {
+groupRouter.post('/new_groups_for_course', async (request, response) => {
     try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({ error: 'You must be an admin to do this' })
@@ -30,7 +30,10 @@ groupRouter.post('/', async (request, response) => {
         const body = request.body
 
         const groupAmount = body.groupAmount
-        const course = await Course.findById(body.course)
+		const course = await Course.findById(body.course)
+		
+		// Remove all previous groups
+		await Group.deleteMany({ "course": body.course })
 
         const courseUsers = course.users.map(u => u.user)
         const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
