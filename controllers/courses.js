@@ -211,5 +211,19 @@ coursesRouter.post('/:id/extra_group', async (request, response) => {
     }
 })
 
+coursesRouter.get('/:id/groups', async (request, response) => {
+    try {
+		const groups = await Group
+						.find({ "course": request.params.id })
+						.populate('users.user', { username: 1 })
+
+		return response.status(200).send(groups)
+
+    } catch (error) {
+        console.log(error)
+        return response.status(400).send({ error: 'Something went wrong...' })
+    }
+})
+
 
 module.exports = coursesRouter

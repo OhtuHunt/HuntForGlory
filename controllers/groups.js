@@ -12,6 +12,7 @@ const mongoose = require('mongoose')
 groupRouter.get('/', async (request, response) => {
 	try {
 		const groups = await Group.find({})
+			.populate('users.user', { username: 1 })
 		return response.status(200).send(groups.map(Group.format))
 
 	} catch (error) {
