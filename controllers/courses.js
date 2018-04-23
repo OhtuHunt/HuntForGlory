@@ -164,7 +164,8 @@ coursesRouter.post('/:id/extra-group', async (request, response) => {
 
 		const group = new Group({
 			course: request.params.id,
-			users: body.users
+			users: body.users,
+			groupName: body.groupName
 		})
 
 		await group.save()
