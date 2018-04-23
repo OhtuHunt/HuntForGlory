@@ -107,7 +107,7 @@ subsRouter.post('/send-push', async (request, response) => {
 		const subsObjs = [].concat.apply([], subsArrays)
 		
 		if (typeof subsObjs === 'undefined' || subsObjs.length === 0) {
-			return response.status(500).send({ error: 'there are no subscriptions for this course' })
+			return response.status(418).send({ error: 'there are no subscriptions for this course' })
 		}
 		
 		await Promise.all(subsObjs.map(async subObj => {
