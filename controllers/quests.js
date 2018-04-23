@@ -40,7 +40,7 @@ questsRouter.get('/', async (request, response) => {
 
 	} catch (error) {
 		console.log(error)
-		response.status(500).send({ error: 'something went wrong' })
+		response.status(400).send({ error: 'something went wrong' })
 	}
 })
 
