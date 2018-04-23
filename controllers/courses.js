@@ -7,7 +7,6 @@ const axios = require('axios')
 const adminCheck = require('../utils/adminCheck')
 const tmcAuth = require('../utils/tmcAuth')
 const tokenParser = require('../utils/tokenParser')
-const divideIntoGroups = require('../utils/divideIntoGroups')
 
 /*
    BASEURL FOR THIS ROUTER IS /api/courses
@@ -135,7 +134,7 @@ coursesRouter.delete('/:id', async (request, response) => {
 	}
 })
 
-coursesRouter.get('/:id/users_without_group', async (request, response) => {
+coursesRouter.get('/:id/users-without-group', async (request, response) => {
     try {
 		const course = await Course.findById(request.params.id)
 		const groups = await Group.find({ "course": request.params.id })
@@ -155,40 +154,7 @@ coursesRouter.get('/:id/users_without_group', async (request, response) => {
     }
 })
 
-coursesRouter.post('/:id/new_groups', async (request, response) => {
-	/** Randomly adds users in a course to predefined amount of groups
-	 * 	Requires amount of groups as groupAmount in body */
-	try {
-		if (await adminCheck.check(request) === false) {
-			return response.status(400).send({ error: 'You must be an admin to do this' })
-		}
-
-		const groupAmount = request.body.groupAmount
-		const course = await Course.findById(request.params.id)
-
-		// Remove all previous groups
-		await Group.deleteMany({ "course": request.params.id })
-
-		const courseUsers = course.users.map(u => u.user)
-		const listOfGroups = divideIntoGroups(groupAmount, courseUsers)
-
-		await Promise.all(listOfGroups.map(async (group) => {
-			const groupObject = new Group({
-				course: request.params.id,
-				users: group
-			})
-			await groupObject.save()
-		}))
-		return response.status(200).end()
-
-	} catch (error) {
-		console.log(error)
-		return response.status(400).send({ error: 'Something went wrong...' })
-	}
-})
-
-
-coursesRouter.post('/:id/extra_group', async (request, response) => {
+coursesRouter.post('/:id/extra-group', async (request, response) => {
 	/** This one adds an extra group to course
 	 * 	Reguires list of users in body*/
     try {
@@ -204,20 +170,6 @@ coursesRouter.post('/:id/extra_group', async (request, response) => {
 		await group.save()
 
 		return response.status(200).send(group)
-
-    } catch (error) {
-        console.log(error)
-        return response.status(400).send({ error: 'Something went wrong...' })
-    }
-})
-
-coursesRouter.get('/:id/groups', async (request, response) => {
-    try {
-		const groups = await Group
-						.find({ "course": request.params.id })
-						.populate('users.user', { username: 1 })
-
-		return response.status(200).send(groups)
 
     } catch (error) {
         console.log(error)
