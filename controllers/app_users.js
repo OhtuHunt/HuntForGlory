@@ -1,6 +1,7 @@
 const usersRouter = require('express').Router()
 const AppUser = require('../models/app_user')
 const Quest = require('../models/quest')
+const Group = require('../models/group')
 const Course = require('../models/course')
 const tmcAuth = require('../utils/tmcAuth')
 const adminCheck = require('../utils/adminCheck')
@@ -18,6 +19,14 @@ const findCourseAndRemoveUser = async (courseId, userToBeRemoved) => {
 	const courseUsers = course.users.filter(u => u.user.toString() !== userToBeRemoved._id.toString())
 	course.users = courseUsers
 	await course.save()
+
+	let groups = await Group.find({ "course": courseId})
+
+	await Promise.all(groups.map(async group => {
+		await Group.findByIdAndUpdate(group._id, 
+			{ $pull : { users : { user : userToBeRemoved._id }}}, 
+			{ new : true })
+	}))
 }
 
 usersRouter.get('/', async (request, response) => {
@@ -63,6 +72,7 @@ usersRouter.delete('/:id', async (request, response) => {
 			await findQuestAndRemoveUser(questObj.quest, userToBeDeleted)
 		}))
 
+		//Remove user from course and groups related to course
 		await Promise.all(userToBeDeleted.courses.map(async (courseObj) => {
 			await findCourseAndRemoveUser(courseObj.course, userToBeDeleted)
 		}))
