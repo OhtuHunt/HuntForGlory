@@ -8,13 +8,7 @@ const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
 
-describe('asd', async() => {
-	test('asdasd' , async() => {
-		expect(1).toBe(1)
-	})
-})
 
-/*
 describe('api/courses: ', async () => {
 	describe('test POST when user is admin, ', async () => {
 		beforeAll(async () => {
@@ -159,7 +153,7 @@ describe('api/courses: ', async () => {
 	})
 })
 
-*/
+
 afterAll(() => {
 	server.close()
 })

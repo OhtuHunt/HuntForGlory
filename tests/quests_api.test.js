@@ -7,18 +7,37 @@ const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
 
-describe('asd', async() => {
-	test('asdasd' , async() => {
-		expect(1).toBe(1)
-	})
-})
-
-/*
 beforeAll(async () => {
 	// Be sure to use test database
-	await Quest.remove({})
 
-	const questObjects = initialQuests.map(quest => new Quest(quest))
+	const initialCourse = new Course(
+		{
+			name: 'initialCourse',
+			courseCode: 'INITC'
+		}
+	)
+	
+	const savedCourse = await initialCourse.save()
+
+	await Quest.remove({})
+	
+	const questObjects = initialQuests.map(quest => new Quest({
+		name: quest.name,
+        description: quest.description,
+        points: quest.points,
+        type: quest.type,
+        done: quest.done,
+        started: quest.started,
+        activationCode: quest.activationCode,
+        usersStarted: quest.usersStarted,
+        usersFinished: quest.usersFinished,
+		deactivated: quest.deactivated,
+		course: {
+			_id: savedCourse._id,
+			name: savedCourse.name
+		}
+	}))
+
 	const promiseArray = questObjects.map(quest => quest.save())
 	await Promise.all(promiseArray)
 })
@@ -27,11 +46,9 @@ describe('API GET all from api/quests', async () => {
 
 	describe('when user is admin', async () => {
 		test('quests include activation code', async () => {
-
 			const response = await api
 				.get('/api/quests')
 				.set('Authorization', `bearer admin`)
-
 			const questActivationCodes = response.body.map(r => r.activationCode)
 
 			expect(questActivationCodes).not.toContain(undefined)
@@ -641,7 +658,7 @@ describe('Quest deactivation', async () => {
 		expect(response.body.error).toEqual('This quest is deactivated')
 	})
 })
-*/
+
 afterAll(() => {
 	server.close()
 }) 
