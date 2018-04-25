@@ -27,24 +27,26 @@ describe('api/groups/ ', async () => {
 			const testCourse = await newCourse.save()
 			const testUsers = await usersInTestDb()
 
-			const testUsersIds = testUsers.map(User.formatOnlyId)
-
+			const testUsersIds = testUsers.map(u => u.id)
+			let usersAsIds = []
+			testUsersIds.map(user => usersAsIds.push({user}))
 			const newGroup = new Group({
 				course: testCourse.id,
-				users: testUsersIds
+				users: usersAsIds
 			})
 			const testGroup = await newGroup.save()
 		})
 
 		test('that response is correct', async () => {
 			const response = await api
-			.get('/api/groups')
-
-			expect(200)
-			const courseId = response.body.course
+				.get('/api/groups')
+				.expect(200)
+			
+			// Check that first group's course is right
+			const courseId = response.body[0].course
 			const testCourse = await giveCourseFromDb()
 
-			expect(courseId.toString()).toBe(testCourse.id.toString())
+			expect(courseId.toString()).toBe(testCourse._id.toString())
 		})
 
 		test('for skipping this until ready', async () => {
@@ -54,37 +56,31 @@ describe('api/groups/ ', async () => {
 		// TODO Add test: fails with nonAdmin user
 		test('new group is added when user is admin.', async () => {
 
-            const userObjects = initialUsers.map(user => new User(user))         
-			const courseObject = new Course({
+            let userObjects = initialUsers.map(user => new User(user))         
+			let courseObject = new Course({
 				name: 'testCourse',
-                courseCode: 'TKT007',
+				courseCode: 'TKT007',
+				users: []
             })
 
-            
-
-            userObjects.forEach(user => {
-                courseObject.users = courseObject.users.concat([{ user: user._id, points: 0 }])
-                user.courses = user.courses.concat([{ course: courseObject._id }])
-            })
+            userObjects.map(user => {
+                courseObject.users.push({ user: user._id, points: 0 })
+            	user.courses.push({ course: courseObject._id })
+				user.save()
+			})
 
             let course = await courseObject.save()
 
             // etsii kurssin id:llä
             
-			await api
-				.post('/api/groups')
+			const response = await api
+				.post(`/api/groups/course/${course._id}/generate`)
 				.set('Authorization', `bearer admin`)
-				.send(course.id, 1)
+				.send( {groupAmount: 2} )
 				.expect(200)
 				.expect('Content-Type', /application\/json/)
 
-			const response = await api
-                .get('/api/groups/abc')
-                console.log(response.body)
-
-			const group = response.body.map(r => r.name)
-			expect(courseNames).toContain('testCourse')
-			expect(response.body.length).toBe(coursesInDb.length + 1)
+			expect(response.body.length).toBe(2)
 		})
 		
 	})	

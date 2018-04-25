@@ -2,7 +2,8 @@ const Quest = require('../models/quest')
 const User = require('../models/app_user')
 const Course = require('../models/course')
 const supertest = require('supertest')
-const { initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb, coursesInTestDb } = require('./test_helper')
+const { initialQuests, questsInTestDb, initialUsers, usersInTestDb, 
+	thisUserIsInTestDb, coursesInTestDb, questsInTestDbWithCourse } = require('./test_helper')
 const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
@@ -259,7 +260,7 @@ describe('POST, user starting quest in api/quest/:id/start', async () => {
 	})
 
 	test('if user hasnt started quest, quest is started for user', async () => {
-		const questsBefore = await questsInTestDb()
+		const questsBefore = await questsInTestDbWithCourse()
 		const questToBeStarted = questsBefore[0]
 		expect(questToBeStarted.usersStarted.length).toBe(0)
 
@@ -460,28 +461,6 @@ describe('Quest deactivation', async () => {
 		await User.remove({})
 		await Course.remove({})
 
-		activeQuest = new Quest({
-			name: "ACTIVE QUEST",
-			description: "THIS QUEST IS ACTIVE",
-			points: 5,
-			type: "Timed solo quest",
-			done: false,
-			started: false,
-			activationCode: "STARTED",
-			deactivated: false
-		})
-
-		notActiveQuest = new Quest({
-			name: "NOT ACTIVE QUEST",
-			description: "THIS QUEST IS NOT ACTIVE",
-			points: 5,
-			type: "Timed solo quest",
-			done: false,
-			started: false,
-			activationCode: "STARTED",
-			deactivated: true
-		})
-
 		testUser = new User({
 			quests: [],
 			username: "hunter",
@@ -502,10 +481,34 @@ describe('Quest deactivation', async () => {
 			}]
 		})
 
+		activeQuest = new Quest({
+			name: "ACTIVE QUEST",
+			description: "THIS QUEST IS ACTIVE",
+			points: 5,
+			type: "Timed solo quest",
+			done: false,
+			started: false,
+			activationCode: "STARTED",
+			deactivated: false,
+			course: testCourse._id
+		})
+
+		notActiveQuest = new Quest({
+			name: "NOT ACTIVE QUEST",
+			description: "THIS QUEST IS NOT ACTIVE",
+			points: 5,
+			type: "Timed solo quest",
+			done: false,
+			started: false,
+			activationCode: "STARTED",
+			deactivated: true,
+			course: testCourse._id
+		})
+
 	})
 
 	test('GET /api/quests to quests returns only acive quests for normal user', async () => {
-
+		await testCourse.save()
 		await activeQuest.save()
 		await notActiveQuest.save()
 
@@ -520,7 +523,7 @@ describe('Quest deactivation', async () => {
 	})
 
 	test('GET /api/quests returns both active and not active quests for admin user', async () => {
-
+		await testCourse.save()
 		await activeQuest.save()
 		await notActiveQuest.save()
 
@@ -537,7 +540,7 @@ describe('Quest deactivation', async () => {
 	})
 
 	test('POST /api/quests/:id/deactivated deactivates quest if user is admin', async () => {
-
+		await testCourse.save()
 		const questBefore = await activeQuest.save()
 
 		expect(questBefore.deactivated).toBe(false)
@@ -556,6 +559,7 @@ describe('Quest deactivation', async () => {
 	})
 
 	test('POST /api/quests/:id/deactivated doesnt deactivate the quest if user is not admin', async () => {
+		await testCourse.save()
 		const questBefore = await activeQuest.save()
 
 		expect(questBefore.deactivated).toBe(false)
@@ -569,6 +573,7 @@ describe('Quest deactivation', async () => {
 	})
 
 	test('POST /api/quest/:id/start starts a quest for user if the quest is active', async () => {
+		await testCourse.save()
 		const questBefore = await activeQuest.save()
 		await testUser.save()
 
@@ -585,6 +590,7 @@ describe('Quest deactivation', async () => {
 	})
 
 	test('POST /api/quest/:id/start doesnt start a quest for user if the quest is deactived', async () => {
+		await testCourse.save()
 		const questBefore = await notActiveQuest.save()
 
 		const response = await api
