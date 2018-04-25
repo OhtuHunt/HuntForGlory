@@ -281,7 +281,7 @@ questsRouter.post('/:id/finish', async (request, response) => {
 			if (!geodist(userLocation, correctLocation, { limit: radius, unit: 'meters' })) {
 				return response.status(400).send({ error: 'Wrong location' })
 			}
-		} else if (questToCheck.activationCode !== request.body.activationCode) {
+		} else if (questToCheck.activationCode.toLowerCase() !== request.body.activationCode.toLowerCase()) {
 			return response.status(400).send({ error: 'Wrong activationcode' })
 		}
 

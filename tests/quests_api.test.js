@@ -25,6 +25,7 @@ describe('API GET all from api/quests', async () => {
 			const response = await api
 				.get('/api/quests')
 				.set('Authorization', `bearer admin`)
+
 			const questActivationCodes = response.body.map(r => r.activationCode)
 
 			expect(questActivationCodes).not.toContain(undefined)

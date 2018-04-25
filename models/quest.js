@@ -16,6 +16,23 @@ const questSchema = new mongoose.Schema({
 	course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }
 })
 
+const formatQuestCourse = (course) => {
+    return {
+        id: course._id,
+        name: course.name
+    }
+}
+
+const formatQuestUsersStarted = (usersStarted) => {
+    return usersStarted.map(user => {
+        return {
+            user: user.user,
+            startTime: user.startTime,
+            finishTime: user.finishTime
+        }
+    })
+}
+
 questSchema.statics.format = (quest) => {
     return {
         id: quest.id,
@@ -24,9 +41,9 @@ questSchema.statics.format = (quest) => {
         points: quest.points,
         type: quest.type,
         activationCode: quest.activationCode,
-        usersStarted: quest.usersStarted,
+        usersStarted: formatQuestUsersStarted(quest.usersStarted),
         deactivated: quest.deactivated,
-        course: quest.course
+        course: formatQuestCourse(quest.course)
 	}
 }
 
@@ -37,9 +54,9 @@ questSchema.statics.formatNonAdmin = (quest) => {
         description: quest.description,
         points: quest.points,
         type: quest.type,
-        usersStarted: quest.usersStarted,
+        usersStarted: formatQuestUsersStarted(quest.usersStarted),
         deactivated: quest.deactivated,
-        course: quest.course
+        course: formatQuestCourse(quest.course)
     }
 }
 

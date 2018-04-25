@@ -8,7 +8,7 @@ const api = supertest(app)
 jest.mock('../utils/tmcAuth')
 
 describe('api/groups/ ', async () => {
-	describe.only('test GET , ', async () => {
+	describe('test GET , ', async () => {
 		beforeAll(async () => {
             await Group.remove({})
             await User.remove({})
@@ -39,8 +39,11 @@ describe('api/groups/ ', async () => {
 			.get('/api/groups')
 
 			expect(200)
-
-			const courseId = response.body.map(r => r.course)
+			console.log('RESPONSE*****************************************************************')
+			console.log(response)
+			console.log('BODY')
+			console.log(response.body)
+			const courseId = response.body.course
 			const testCourse = await giveCourseFromDb()
 
 			expect(courseId.toString()).toBe(testCourse.id.toString())

@@ -28,7 +28,7 @@ loginRouter.post('/', async (request, response) => {
         }
 
         const user = await axios.get('https://tmc.mooc.fi/api/v8/users/current', config)
-        let userById = await AppUser.findOne({ "tmc_id": user.data.id })
+        let userById = await AppUser.findOne({ "tmc_id": user.data.id }).populate('courses.course', { name: 1, id: 1})
 
         if (userById === null) {
             
@@ -44,9 +44,9 @@ loginRouter.post('/', async (request, response) => {
             })
 
             const userToSave = await appUser.save()
-            userById = await AppUser.findOne({ "tmc_id": userToSave.tmc_id })
+            userById = await AppUser.findOne({ "tmc_id": userToSave.tmc_id }).populate('courses.course', { name: 1, id: 1})
         } 
-
+        console.log(userById)
         response.status(200).send({user: AppUser.format(userById), token: res.accessToken, isNewUser})
 
     } catch (e) {

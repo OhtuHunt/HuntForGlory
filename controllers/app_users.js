@@ -115,7 +115,7 @@ usersRouter.get('/:id', async (request, response) => {
 	try {
 		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 
-		const userFromDb = await AppUser.findById(request.params.id)
+		const userFromDb = await AppUser.findById(request.params.id).populate('courses.course', { name: 1, id: 1})
 		if(await adminCheck.check(request) === true) {
 			response.status(200).send(AppUser.format(userFromDb))
 		} else {
