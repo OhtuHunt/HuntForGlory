@@ -116,19 +116,9 @@ groupRouter.post('/move-user', async (request, response) => {
 		await Group.findByIdAndUpdate(body.groupFrom, 
 			{ $pull: { users : { user: userId } } }, { new: true })
 
-		/*		let groupFrom = await Group.findById(body.groupFromId)
-		groupFromUsersAfter = groupFrom.users.filter(userItem => userItem.user.toString() !== userId.toString())
-		groupFrom.users = groupFromUsersAfter
-		await groupFrom.save() */
-
 		//Add user to groupTo
 		await Group.findByIdAndUpdate(body.groupTo, 
 			{ $push: { users: { user: userId }}}, { new: true })
-
-		/*		let groupTo = await Group.findById(body.groupToId)
-		groupToUsersAfter = groupTo.users.concat({ user: userId })
-		groupTo.users = groupToUsersAfter
-		await groupTo.save() */
 
 		const allGroups = await Group.find({}).populate('users.user', { username: 1 })
 

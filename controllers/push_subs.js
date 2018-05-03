@@ -63,7 +63,6 @@ subsRouter.post('/save', async (request, response) => {
 	}
 })
 
-// ADD REMOVE FOR SUBS!!!!
 subsRouter.post('/send-push', async (request, response) => {
 	/* Sends push notifications to users in a course that have a subscription
 	 * Requires admin token; course id and notification message in body
@@ -120,21 +119,5 @@ subsRouter.post('/send-push', async (request, response) => {
 		response.status(400).send({ error: 'something went wrong' })
 	}
 })
-
-/* This can be further edited if delete is needed
-
-subsRouter.delete('/delete', async (request, response) => {
-	try {
-		const body = request.body
-
-		await PushSubscription.findByIdAndRemove(request.params.id)
-		response.status(200).end()
-
-	} catch (error) {
-		console.log(error)
-		response.status(400).send({ error: 'something went wrong' })
-	}
-})
-*/
 
 module.exports = subsRouter

@@ -24,7 +24,6 @@ const findUserAndRemoveCourse = async (userId, courseToBeRemoved) => {
 }
 
 coursesRouter.get('/', async (request, response) => {
-	// TODO refactor to populate when joined
 	try {
 		const courses = await Course.find({})
 			.populate('users.user', { username: 1 })
@@ -38,12 +37,6 @@ coursesRouter.get('/', async (request, response) => {
 
 coursesRouter.post('/', async (request, response) => {
 	try {
-        /*
-        Old comments from questRouter
-        //let token = parseToken(request)
-        //let user = await tmcAuth.authenticate(token)
-        */
-
 		if (await adminCheck.check(request) === false) {
 			return response.status(400).send({ error: 'Admin priviledges needed' })
 		}
