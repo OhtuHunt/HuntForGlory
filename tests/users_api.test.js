@@ -7,6 +7,7 @@ const { app, server } = require('../src/server/server')
 const api = supertest(app)
 jest.mock('../utils/tmcAuth')
 
+
 describe('API GET all from api/users', async () => {
 
     beforeEach(async () => {
@@ -367,3 +368,4 @@ describe('API GET user in api/users/:id', async () => {
 afterAll(() => {
     server.close()
 })
+

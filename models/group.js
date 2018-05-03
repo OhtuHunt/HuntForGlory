@@ -10,13 +10,22 @@ const groupSchema = new mongoose.Schema({
 		}]
 })
 
+const formatGroupUsers = (users) => {
+    return users.map(user => {
+        return {
+            id: user.user._id,
+            username: user.user.username
+        }
+    })
+}
+
 groupSchema.statics.format = (group) => {
     return {
 		//instructor: group.instructor,
 		groupName: group.groupName,
         id: group.id,
         course: group.course,
-        users: group.users
+        users: formatGroupUsers(group.users)
     }
 }
 

@@ -11,6 +11,15 @@ const courseSchema = new mongoose.Schema({
         }]
 })
 
+const formatCourseUsers = (users) => {
+    return users.map(user => {
+        return {
+            id: user.user._id,
+            username: user.user.username,
+            points: user.points
+        }
+    })
+}
 // no users
 courseSchema.statics.format = (course) => {
     return {
@@ -18,7 +27,7 @@ courseSchema.statics.format = (course) => {
         name: course.name,
         courseCode: course.courseCode,
 		quests: course.quests,
-		users: course.users
+		users: formatCourseUsers(course.users)
     }
 }
 

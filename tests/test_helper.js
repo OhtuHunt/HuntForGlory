@@ -98,6 +98,18 @@ const questsInTestDb = async () => {
     return quests
 }
 
+const questsInTestDbWithCourse = async () => {
+	//Course doesn't know its quests, only because tests don't require it
+	const quests = await Quest.find({})
+	const course = await giveCourseFromDb()
+
+	await Promise.all(quests.map(async quest => {
+		quest.course = course._id
+		await quest.save()
+	}))
+    return quests
+}
+
 const usersInTestDb = async () => {
     const users = await AppUser.find({})
     return users
@@ -123,5 +135,7 @@ const thisUserIsInTestDb = async (id) => {
 }
 
 module.exports = {
-    initialQuests, questsInTestDb, initialUsers, usersInTestDb, thisUserIsInTestDb, coursesInTestDb, giveCourseFromDb
+	initialQuests, questsInTestDb, initialUsers, usersInTestDb, 
+	thisUserIsInTestDb, coursesInTestDb, giveCourseFromDb,
+	questsInTestDbWithCourse
 }
