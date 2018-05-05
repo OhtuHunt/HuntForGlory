@@ -41,6 +41,12 @@ Backend:
 "test": Runs the automated Jest-tests within test environment, configured with verbose to run in sequence.
 "localDev": Runs the application within development enviroment where REACT_APP_LOCAL variable is true.
 
+Frontend: (all build scripts include configured terminal command for moving build files into backend repository)
+"build": Standard build with production as base url
+"buildDev": Build with development environment and staging as base url
+"buildLocal": Build with development environment and REACT_APP_LOCAL true.
+"buildAll": runs all the build scripts above
+
 
 ### Authentication
 
