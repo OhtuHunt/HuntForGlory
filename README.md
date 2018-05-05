@@ -34,6 +34,14 @@ Environment variables:
 | PORT | Port used by the backend server |
 | NODE_ENV | Node environment, value can be `production`, `development` or `test`. |
 
+### Scripts (standard scripts excluded)
+
+Backend:
+"watch": Runs the application within development environment.
+"test": Runs the automated Jest-tests within test environment, configured with verbose to run in sequence.
+"localDev": Runs the application within development enviroment where REACT_APP_LOCAL variable is true.
+
+
 ### Authentication
 
 Application uses [TMC-authentication](https://tmc.mooc.fi) to identify users. Therefore, you need to register to tmc in order to use the application. Authorization is done with OAuth2.
