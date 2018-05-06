@@ -19,7 +19,6 @@ questsRouter.get('/', async (request, response) => {
 	//Does require logged in user
 	//But we need to filter quests from courses where user attends
 	try {
-		//const quests = await Quest.find({})
 		const user = await tmcAuth.authenticate(tokenParser.parseToken(request))
 
 		if (user.admin === true) {
@@ -66,8 +65,7 @@ questsRouter.get('/:id', async (request, response) => {
 
 questsRouter.post('/', async (request, response) => {
 	try {
-		//let token = parseToken(request)
-		//let user = await tmcAuth.authenticate(token)
+		
 		if (await adminCheck.check(request) === false) {
 			return response.status(400).send({ error: 'Admin priviledges needed' })
 		}
@@ -133,7 +131,8 @@ questsRouter.put('/:id', async (request, response) => {
 })
 
 questsRouter.post('/:id/deactivated', async (request, response) => {
-	// changes quest's deactivated boolean based on the previous value. If course is deactivated then this post changes it to activated
+	/* changes quest's deactivated boolean based on the previous value. 
+	 * If course is deactivated then this post changes it to activated */
 	try {
 		if (await adminCheck.check(request) === false) {
 			return response.status(400).send({ error: 'Admin priviledges needed' })
@@ -236,13 +235,6 @@ questsRouter.post('/:id/start', async (request, response) => {
 
 
 questsRouter.post('/:id/finish', async (request, response) => {
-    /*finishedQuests = finishedQuests.filter(questItem => questItem.quest.toString() === request.params.id.toString())
-        .map(quest => {
-            const newQuest = quest
-            newQuest.finishTime = Date.now()
-            return newQuest
-        }) */
-
 	//This one starts the quest
 	//Requires logged in user
 	//If quest id is not found, return error status x

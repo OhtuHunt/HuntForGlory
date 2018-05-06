@@ -127,16 +127,4 @@ usersRouter.get('/:id', async (request, response) => {
 	}
 })
 
-//   usersRouter.get('/api/users/tmc/:id', (request, response) => {
-//     AppUser
-//       .findOne({"tmc_id": request.params.id})
-//       .then(user => {
-//         if (user) {
-//           response.json(user)
-//         } else {
-//           response.status(404).send({ error: 'malformatted id'})
-//         }
-//       })
-//   })
-
 module.exports = usersRouter

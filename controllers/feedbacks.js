@@ -44,10 +44,9 @@ feedbackRouter.post('/', async (request, response) => {
     }
 })
 
-// mark quest as read
-
 feedbackRouter.post('/:id/read', async (request, response) => {
-    try {
+	/** Mark feedback as read */
+	try {
         if (await adminCheck.check(request) === false) {
             return response.status(400).send({error: 'You must be admin to do this'})
         }
